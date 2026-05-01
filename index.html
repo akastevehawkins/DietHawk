@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1018" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DietHawk" />
+    <meta
+      name="description"
+      content="DietHawk is Steve Hawkins' direct, mobile-first keto, fasting, movement, and tracking guide."
+    />
+    <title>DietHawk | Steve's Keto Command</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="app-shell">
+      <header class="hero panel">
+        <div class="hero-copy">
+          <p class="eyebrow">Daily Keto Command</p>
+          <h1>No bargaining. Follow the plan.</h1>
+          <p class="hero-lead">
+            This is Steve Hawkins' daily operating system: fasting clock, keto meal calls,
+            alcohol accountability, movement blocks, and blunt reminders that keep the day on rails.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-button" id="enable-notifications" type="button">Enable Alerts</button>
+            <button class="secondary-button" id="refresh-mindset" type="button">New Reality Check</button>
+          </div>
+        </div>
+
+        <div class="hero-side">
+          <section class="profile-grid" aria-label="Profile stats">
+            <article class="mini-stat">
+              <span class="mini-label">Age</span>
+              <strong id="profile-age">51</strong>
+            </article>
+            <article class="mini-stat">
+              <span class="mini-label">Weight</span>
+              <strong>235 lb</strong>
+            </article>
+            <article class="mini-stat">
+              <span class="mini-label">Height</span>
+              <strong>6'2&quot;</strong>
+            </article>
+            <article class="mini-stat">
+              <span class="mini-label">BMI</span>
+              <strong id="profile-bmi">30.2</strong>
+            </article>
+          </section>
+
+          <section class="mindset-card">
+            <p class="eyebrow">Today's Message</p>
+            <p id="mindset-message" class="mindset-message"></p>
+          </section>
+
+          <section class="install-card" id="install-card">
+            <p class="eyebrow">iPhone Install</p>
+            <p id="install-message" class="install-message">
+              Open this in Safari, tap Share, then Add to Home Screen. That gives the cleanest full-screen iPhone layout.
+            </p>
+            <button class="ghost-button install-dismiss" id="dismiss-install" type="button">Hide This</button>
+          </section>
+        </div>
+      </header>
+
+      <section class="command-grid">
+        <article class="panel phase-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Live Phase</p>
+              <h2>Eat when allowed. Fast when told.</h2>
+            </div>
+            <span class="phase-badge" id="phase-badge">FASTING</span>
+          </div>
+          <p id="phase-countdown" class="countdown">00h 00m until eating window</p>
+          <p id="phase-instruction" class="support-text"></p>
+          <div class="clock-row">
+            <span class="warning-chip" id="local-time-display">Local time</span>
+            <span class="warning-chip" id="time-zone-display">Timezone</span>
+          </div>
+
+          <div class="rule-list">
+            <article class="rule-card">
+              <span class="rule-title">During fast</span>
+              <p>Water, black coffee, unsweet tea, zero-sugar electrolytes only.</p>
+            </article>
+            <article class="rule-card">
+              <span class="rule-title">During eating window</span>
+              <p>Protein first. Net carbs stay under control. No aimless snacking.</p>
+            </article>
+            <article class="rule-card rule-card-warning">
+              <span class="rule-title">Medication + alcohol caution</span>
+              <p>
+                Lisinopril-HCTZ and dehydration do not mix well. Alcohol, low food intake,
+                heat, or dizziness mean slow down, hydrate, and pay attention.
+              </p>
+            </article>
+          </div>
+        </article>
+
+        <article class="panel warning-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Live Warning</p>
+              <h2>What needs correcting now</h2>
+            </div>
+          </div>
+          <p id="warning-message" class="warning-message"></p>
+          <div class="warning-chips" id="warning-chips"></div>
+        </article>
+
+        <article class="panel tracker-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Daily Scoreboard</p>
+              <h2>Track what counts</h2>
+            </div>
+            <button class="ghost-button" id="reset-day" type="button">Reset Day</button>
+          </div>
+
+          <div class="tracker-grid">
+            <section class="tracker-card">
+              <span class="tracker-label">Water</span>
+              <strong id="water-value">0.0 L</strong>
+              <div class="tracker-actions">
+                <button data-action="water-adjust" data-amount="-0.5" type="button">-0.5 L</button>
+                <button data-action="water-adjust" data-amount="0.5" type="button">+0.5 L</button>
+              </div>
+            </section>
+
+            <section class="tracker-card">
+              <span class="tracker-label">Movement</span>
+              <strong id="movement-value">0 min</strong>
+              <div class="tracker-actions">
+                <button data-action="movement-adjust" data-amount="5" type="button">+5 min</button>
+                <button data-action="movement-adjust" data-amount="10" type="button">+10 min</button>
+              </div>
+            </section>
+
+            <section class="tracker-card tracker-card-wide">
+              <label class="tracker-label" for="steps-input">Steps</label>
+              <div class="steps-row">
+                <input id="steps-input" type="number" min="0" step="100" inputmode="numeric" />
+                <button class="primary-button small" id="save-steps" type="button">Update</button>
+              </div>
+            </section>
+          </div>
+
+          <div class="totals-grid" id="totals-grid" aria-label="Macro totals"></div>
+        </article>
+
+        <article class="panel goals-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Daily Goals</p>
+              <h2>Hit the non-negotiables</h2>
+            </div>
+          </div>
+          <div id="goals-list" class="goals-list"></div>
+        </article>
+      </section>
+
+      <section class="command-grid timer-grid">
+        <article class="panel sitstand-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Sit/Stand Timer</p>
+              <h2>Next posture change</h2>
+            </div>
+            <span class="timer-pill ready" id="sitstand-status">READY</span>
+          </div>
+          <p id="sitstand-countdown" class="countdown">00h 00m</p>
+          <p id="sitstand-instruction" class="support-text"></p>
+          <div class="warning-chips">
+            <span class="warning-chip" id="sitstand-next-time"></span>
+            <span class="warning-chip" id="sitstand-snoozes"></span>
+          </div>
+        </article>
+
+        <article class="panel movement-timer-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Movement Timer</p>
+              <h2>Quick movement block</h2>
+            </div>
+            <button class="ghost-button" id="new-quick-move" type="button">New Quick Move</button>
+          </div>
+          <div class="timer-stack">
+            <span class="timer-pill ready" id="movement-timer-state">READY</span>
+            <p id="movement-timer-countdown" class="countdown">Ready</p>
+            <p id="movement-timer-instruction" class="support-text"></p>
+          </div>
+          <article class="quick-move-card">
+            <span class="move-tag">Do this now</span>
+            <h3 id="quick-move-title"></h3>
+            <p id="quick-move-text"></p>
+          </article>
+          <div class="timer-controls">
+            <button class="primary-button small" data-movement-minutes="2" type="button">Start 2m</button>
+            <button class="primary-button small" data-movement-minutes="5" type="button">Start 5m</button>
+            <button class="primary-button small" data-movement-minutes="10" type="button">Start 10m</button>
+            <button class="primary-button small" id="complete-movement-timer" type="button">Count It</button>
+            <button class="ghost-button" id="reset-movement-timer" type="button">Reset</button>
+          </div>
+          <p id="scheduled-movement-summary" class="support-text"></p>
+        </article>
+      </section>
+
+      <section class="panel schedule-panel">
+        <div class="panel-head compact">
+          <div>
+            <p class="eyebrow">Task Queue</p>
+            <h2>Do this when the clock says so</h2>
+          </div>
+        </div>
+        <div class="task-subhead">
+          <p id="next-task-summary" class="support-text"></p>
+          <p class="support-text">Each task gets two snoozes max. Pick 30 or 60 minutes and get back to work.</p>
+        </div>
+        <div id="task-list" class="task-list"></div>
+      </section>
+
+      <section class="panel timeline-panel">
+        <div class="panel-head compact">
+          <div>
+            <p class="eyebrow">Day Plan</p>
+            <h2>Default schedule for Steve</h2>
+          </div>
+        </div>
+        <div id="timeline-list" class="timeline-list"></div>
+      </section>
+
+      <section class="meal-layout">
+        <article class="panel meal-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Breakfast</p>
+              <h2>Break the fast properly</h2>
+            </div>
+          </div>
+          <div id="breakfast-meals" class="meal-grid"></div>
+        </article>
+
+        <article class="panel meal-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Lunch</p>
+              <h2>Protein and satiety first</h2>
+            </div>
+          </div>
+          <div id="lunch-meals" class="meal-grid"></div>
+        </article>
+
+        <article class="panel meal-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Dinner</p>
+              <h2>Finish strong and close the kitchen</h2>
+            </div>
+          </div>
+          <div id="dinner-meals" class="meal-grid"></div>
+        </article>
+
+        <article class="panel meal-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Snack</p>
+              <h2>Only if it keeps the plan intact</h2>
+            </div>
+          </div>
+          <div id="snack-meals" class="meal-grid"></div>
+        </article>
+      </section>
+
+      <section class="command-grid lower-grid">
+        <article class="panel move-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Office And Home Moves</p>
+              <h2>Move before you feel like it</h2>
+            </div>
+            <button class="ghost-button" id="new-move" type="button">New Move</button>
+          </div>
+          <div class="move-grid">
+            <section class="move-card move-card-accent">
+              <span class="move-tag">Next office drill</span>
+              <h3 id="office-move-title"></h3>
+              <p id="office-move-text"></p>
+            </section>
+            <section class="move-card">
+              <span class="move-tag">Next home drill</span>
+              <h3 id="home-move-title"></h3>
+              <p id="home-move-text"></p>
+            </section>
+          </div>
+        </article>
+
+        <article class="panel alcohol-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Alcohol Monitor</p>
+              <h2>Log every drink or stop pretending</h2>
+            </div>
+          </div>
+          <div id="drink-buttons" class="drink-buttons"></div>
+          <div class="alcohol-summary">
+            <div class="alcohol-stat">
+              <span class="tracker-label">Standard drinks</span>
+              <strong id="drink-count">0</strong>
+            </div>
+            <div class="alcohol-stat">
+              <span class="tracker-label">Alcohol calories</span>
+              <strong id="drink-calories">0</strong>
+            </div>
+            <div class="alcohol-stat">
+              <span class="tracker-label">Alcohol carbs</span>
+              <strong id="drink-carbs">0 g</strong>
+            </div>
+          </div>
+          <p id="alcohol-warning" class="warning-message minor"></p>
+        </article>
+      </section>
+
+      <section class="panel restaurant-panel">
+        <div class="panel-head compact">
+          <div>
+            <p class="eyebrow">Restaurant Audit</p>
+            <h2>What can I eat here</h2>
+          </div>
+          <span class="timer-pill ready" id="restaurant-phase-badge">CHECK MENU</span>
+        </div>
+        <p class="support-text restaurant-intro">
+          Type only the restaurant name and hit Audit Menu. Or take a menu screenshot right here. The app will read the photo in-browser, drop the text into the audit, and tell you what is actually safe to order.
+        </p>
+        <div class="restaurant-form">
+          <label class="restaurant-field">
+            <span>Restaurant name</span>
+            <input id="restaurant-name" type="text" placeholder="Chipotle, Texas Roadhouse, Chick-fil-A" autocomplete="off" />
+          </label>
+          <label class="restaurant-field">
+            <span>Menu URL (optional)</span>
+            <input id="restaurant-url" type="url" placeholder="Optional: https://restaurant.com/menu" autocomplete="off" />
+          </label>
+          <label class="restaurant-field restaurant-field-wide restaurant-photo-field">
+            <span>Menu screenshot or photo</span>
+            <input id="restaurant-photo-input" type="file" accept="image/*" capture="environment" />
+            <small class="restaurant-field-note">
+              Take the shot. OCR runs in the browser and the audit starts automatically.
+            </small>
+          </label>
+          <label class="restaurant-field restaurant-field-wide">
+            <span>Paste menu text if the site is annoying</span>
+            <textarea
+              id="restaurant-menu-text"
+              rows="6"
+              placeholder="OCR text lands here automatically. You can also paste menu text here if the site is a pain."
+            ></textarea>
+          </label>
+        </div>
+        <div class="warning-chips restaurant-photo-chips">
+          <span class="warning-chip" id="restaurant-photo-chip">No screenshot selected</span>
+          <span class="warning-chip" id="restaurant-ocr-chip">OCR idle</span>
+        </div>
+        <div class="restaurant-actions">
+          <button class="primary-button" id="analyze-restaurant" type="button">Audit Menu</button>
+          <button class="ghost-button" id="clear-restaurant" type="button">Clear</button>
+        </div>
+        <div class="warning-chips">
+          <span class="warning-chip" id="restaurant-context-chip">Schedule context</span>
+          <span class="warning-chip" id="restaurant-source-chip">No menu loaded yet</span>
+        </div>
+        <div class="restaurant-results">
+          <p class="restaurant-verdict idle" id="restaurant-verdict">
+            No restaurant checked yet. Give me a name, a URL, or pasted menu text.
+          </p>
+          <p class="support-text" id="restaurant-notes">
+            Restaurant name alone is enough for a best-effort lookup. A direct menu URL is faster, and pasted menu text is the fallback when the website is a mess.
+          </p>
+          <div class="restaurant-columns">
+            <section class="restaurant-column">
+              <h3>Best bets</h3>
+              <div id="restaurant-good-options" class="restaurant-option-list"></div>
+            </section>
+            <section class="restaurant-column">
+              <h3>Leave these alone</h3>
+              <div id="restaurant-bad-options" class="restaurant-option-list"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel motivation-panel">
+        <div class="panel-head compact">
+          <div>
+            <p class="eyebrow">Daily Motivation</p>
+            <h2>Use pressure without the excuses</h2>
+          </div>
+        </div>
+        <div class="motivation-grid">
+          <article class="quote-card">
+            <h3>Direct self-talk</h3>
+            <ul class="quote-list">
+              <li>Discipline first. Mood can show up later.</li>
+              <li>Your blood pressure does not care how unmotivated you feel.</li>
+              <li>The next ten minutes matter more than the last ten mistakes.</li>
+              <li>Be strong and present for the people you love. Prove it with this meal and this walk.</li>
+            </ul>
+          </article>
+          <article class="quote-card quote-card-accent">
+            <h3>Daily targets</h3>
+            <ul class="quote-list">
+              <li>Fasting window: 6:30 PM to 10:30 AM.</li>
+              <li>Protein target: 170 g.</li>
+              <li>Net carbs cap: 30 g.</li>
+              <li>Water target: 3.0 L minimum.</li>
+              <li>Movement target: 45 minutes and 8,000 steps.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <footer class="footer-note">
+        <p>
+          This tool is a structured habit system, not medical care. Keto, fasting, dehydration,
+          blood pressure medication, and alcohol can interact badly. If you get dizzy, weak, or feel off,
+          stop, hydrate, and use your clinician's advice over the app.
+        </p>
+      </footer>
+    </main>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+    <div id="task-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+        <p class="eyebrow">Task due now</p>
+        <h2 id="task-modal-title"></h2>
+        <p id="task-modal-body" class="support-text"></p>
+        <div class="modal-actions">
+          <button class="primary-button" id="modal-done" type="button">Done</button>
+          <button class="secondary-button" id="modal-snooze-30" type="button">Snooze 30m</button>
+          <button class="secondary-button" id="modal-snooze-60" type="button">Snooze 60m</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

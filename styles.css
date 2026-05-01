@@ -1,0 +1,1084 @@
+:root {
+  --bg: #070b12;
+  --panel: rgba(8, 13, 21, 0.95);
+  --panel-soft: rgba(12, 18, 28, 0.9);
+  --surface: rgba(23, 31, 43, 0.92);
+  --surface-2: rgba(31, 41, 55, 0.92);
+  --text: #f6f0e6;
+  --text-light: #fbf7f1;
+  --muted: #a6afbe;
+  --accent: #ff6a3d;
+  --accent-2: #ffc55a;
+  --accent-3: #34d3c2;
+  --danger: #ff7a7a;
+  --success: #5fd7a2;
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
+  --radius-xl: 30px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Instrument Sans", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(52, 211, 194, 0.18), transparent 28%),
+    radial-gradient(circle at 78% 12%, rgba(255, 106, 61, 0.18), transparent 24%),
+    linear-gradient(180deg, #0b1018 0%, #0d1420 52%, #081019 100%);
+  padding: calc(18px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom));
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+.ambient {
+  position: fixed;
+  border-radius: 999px;
+  filter: blur(28px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-one {
+  width: 240px;
+  height: 240px;
+  background: rgba(52, 211, 194, 0.16);
+  top: -40px;
+  left: -30px;
+}
+
+.ambient-two {
+  width: 260px;
+  height: 260px;
+  background: rgba(255, 106, 61, 0.16);
+  bottom: 120px;
+  right: -50px;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 35%);
+  pointer-events: none;
+}
+
+.hero {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1.6fr 1fr;
+  padding: 26px;
+  margin-bottom: 16px;
+  background:
+    linear-gradient(135deg, rgba(6, 10, 16, 0.98), rgba(14, 20, 31, 0.96)),
+    linear-gradient(160deg, rgba(255, 106, 61, 0.16), transparent 70%);
+  color: var(--text-light);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -40px -110px auto;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 197, 90, 0.25), transparent 65%);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.hero .eyebrow,
+.phase-panel .eyebrow,
+.warning-panel .eyebrow,
+.tracker-panel .eyebrow,
+.goals-panel .eyebrow,
+.schedule-panel .eyebrow,
+.timeline-panel .eyebrow,
+.meal-panel .eyebrow,
+.move-panel .eyebrow,
+.alcohol-panel .eyebrow,
+.motivation-panel .eyebrow,
+.sitstand-panel .eyebrow,
+.movement-timer-panel .eyebrow {
+  color: rgba(166, 175, 190, 0.88);
+}
+
+.hero-copy,
+.hero-side,
+.panel-head,
+.task-card,
+.meal-card,
+.move-card,
+.quote-card,
+.tracker-card,
+.mini-stat,
+.mindset-card,
+.rule-card,
+.goal-card,
+.timeline-card,
+.drink-chip,
+.alcohol-stat {
+  position: relative;
+  z-index: 1;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: -0.04em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 0.95;
+  max-width: 10ch;
+}
+
+h2 {
+  font-size: clamp(1.3rem, 2.4vw, 2rem);
+}
+
+h3 {
+  font-size: 1.1rem;
+}
+
+p {
+  margin: 0;
+}
+
+.hero-lead {
+  max-width: 60ch;
+  margin-top: 14px;
+  color: rgba(247, 246, 242, 0.8);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.hero-actions,
+.tracker-actions,
+.modal-actions,
+.steps-row,
+.drink-buttons,
+.warning-chips,
+.totals-grid,
+.task-meta,
+.meal-macros,
+.tracker-grid,
+.move-grid,
+.motivation-grid,
+.profile-grid,
+.command-grid,
+.meal-layout,
+.task-subhead,
+.rule-list,
+.alcohol-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button,
+.tracker-actions button,
+.task-actions button,
+.meal-card button,
+.drink-buttons button {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.ghost-button:hover,
+.tracker-actions button:hover,
+.task-actions button:hover,
+.meal-card button:hover,
+.drink-buttons button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--accent), #ff7f4f);
+  color: white;
+  box-shadow: 0 12px 24px rgba(240, 85, 55, 0.25);
+}
+
+.primary-button.small {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.secondary-button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--text-light);
+}
+
+.ghost-button {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-stat,
+.mindset-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mini-label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.82rem;
+}
+
+.mini-stat strong {
+  font-size: 1.45rem;
+}
+
+.mindset-card {
+  margin-top: 12px;
+}
+
+.install-card {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.install-card.hidden {
+  display: none;
+}
+
+.install-message {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.install-dismiss {
+  margin-top: 12px;
+}
+
+.mindset-message {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.lower-grid {
+  align-items: stretch;
+}
+
+.phase-panel,
+.tracker-panel {
+  grid-column: span 6;
+}
+
+.warning-panel,
+.goals-panel,
+.move-panel,
+.alcohol-panel,
+.sitstand-panel,
+.movement-timer-panel {
+  grid-column: span 6;
+}
+
+.phase-panel,
+.warning-panel,
+.tracker-panel,
+.goals-panel,
+.sitstand-panel,
+.movement-timer-panel,
+.schedule-panel,
+.timeline-panel,
+.meal-panel,
+.restaurant-panel,
+.move-panel,
+.alcohol-panel,
+.motivation-panel {
+  padding: 22px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.panel-head.compact {
+  margin-bottom: 18px;
+}
+
+.phase-badge {
+  align-self: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(240, 85, 55, 0.12);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.phase-badge.eating {
+  background: rgba(91, 209, 153, 0.16);
+  color: #0a7d58;
+}
+
+.timer-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  color: var(--text-light);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.timer-pill.ready {
+  color: var(--accent-2);
+}
+
+.timer-pill.active {
+  color: var(--accent-3);
+}
+
+.timer-pill.due {
+  color: var(--accent);
+}
+
+.countdown {
+  margin-bottom: 10px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+}
+
+.support-text {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.clock-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.rule-list {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rule-card {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rule-title,
+.tracker-label,
+.move-tag {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rule-card-warning {
+  background: rgba(255, 106, 61, 0.12);
+}
+
+.warning-message {
+  min-height: 72px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.warning-message.minor {
+  min-height: 0;
+  margin-top: 14px;
+}
+
+.warning-chip,
+.total-chip {
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.tracker-grid,
+.totals-grid {
+  margin-top: 12px;
+}
+
+.tracker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tracker-card,
+.alcohol-stat,
+.goal-card,
+.task-card,
+.timeline-card,
+.meal-card,
+.move-card,
+.quote-card {
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tracker-card,
+.alcohol-stat {
+  padding: 16px;
+}
+
+.tracker-card strong,
+.alcohol-stat strong {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 1.6rem;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.tracker-card-wide {
+  grid-column: span 1;
+}
+
+.steps-row {
+  align-items: center;
+}
+
+#steps-input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+}
+
+.goals-list,
+.task-list,
+.timeline-list,
+.meal-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.goal-card {
+  padding: 14px;
+}
+
+.goal-head {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 10px;
+}
+
+.timer-stack {
+  margin-bottom: 16px;
+}
+
+.quick-move-card {
+  padding: 16px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(255, 106, 61, 0.12), rgba(52, 211, 194, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.quick-move-card p {
+  color: var(--text-light);
+  line-height: 1.55;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.restaurant-intro {
+  margin-bottom: 16px;
+}
+
+.restaurant-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.restaurant-field {
+  display: grid;
+  gap: 8px;
+}
+
+.restaurant-field span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.restaurant-field input,
+.restaurant-field textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+  resize: vertical;
+}
+
+.restaurant-field textarea {
+  min-height: 132px;
+}
+
+.restaurant-field input[type="file"] {
+  padding: 10px 12px;
+  color: var(--muted);
+}
+
+.restaurant-field input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, var(--accent), #ff7f4f);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.restaurant-field-note {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.restaurant-field-wide {
+  grid-column: 1 / -1;
+}
+
+.restaurant-photo-chips {
+  margin-bottom: 14px;
+}
+
+.restaurant-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.restaurant-results {
+  margin-top: 14px;
+}
+
+.restaurant-verdict {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.45;
+}
+
+.restaurant-verdict.go {
+  border-color: rgba(95, 215, 162, 0.28);
+  background: rgba(95, 215, 162, 0.08);
+}
+
+.restaurant-verdict.caution,
+.restaurant-verdict.hold {
+  border-color: rgba(255, 197, 90, 0.26);
+  background: rgba(255, 197, 90, 0.1);
+}
+
+.restaurant-verdict.avoid {
+  border-color: rgba(255, 106, 61, 0.3);
+  background: rgba(255, 106, 61, 0.12);
+}
+
+.restaurant-verdict.loading,
+.restaurant-verdict.idle {
+  color: var(--text-light);
+}
+
+.restaurant-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.restaurant-column {
+  display: grid;
+  gap: 12px;
+}
+
+.restaurant-option-list {
+  display: grid;
+  gap: 10px;
+}
+
+.restaurant-option,
+.restaurant-empty {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.restaurant-option h4,
+.restaurant-empty {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.restaurant-option p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.restaurant-option.good {
+  border-color: rgba(95, 215, 162, 0.24);
+}
+
+.restaurant-option.bad {
+  border-color: rgba(255, 106, 61, 0.24);
+}
+
+.goal-head span:last-child {
+  font-weight: 700;
+}
+
+.goal-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(17, 21, 30, 0.08);
+  overflow: hidden;
+}
+
+.goal-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.goal-fill.good {
+  background: linear-gradient(90deg, var(--success), #8ee7bf);
+}
+
+.goal-fill.warn {
+  background: linear-gradient(90deg, #ff9a4d, #ffd26f);
+}
+
+.task-subhead {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.task-card,
+.timeline-card,
+.meal-card,
+.move-card,
+.quote-card {
+  padding: 16px;
+}
+
+.task-card {
+  display: grid;
+  gap: 12px;
+}
+
+.task-card.due {
+  border-color: rgba(255, 106, 61, 0.28);
+  background: rgba(255, 106, 61, 0.12);
+}
+
+.task-card.completed {
+  opacity: 0.62;
+}
+
+.task-card.snoozed {
+  background: rgba(52, 211, 194, 0.1);
+}
+
+.task-top,
+.meal-top,
+.timeline-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.task-time,
+.meal-type,
+.timeline-time {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.task-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-actions button,
+.meal-card button,
+.drink-buttons button {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-light);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.task-actions button[disabled],
+.meal-card button[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.meal-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.meal-grid {
+  gap: 14px;
+}
+
+.meal-card {
+  background:
+    linear-gradient(140deg, rgba(18, 26, 38, 0.92), rgba(12, 18, 28, 0.9)),
+    radial-gradient(circle at top right, rgba(255, 197, 90, 0.14), transparent 34%);
+}
+
+.meal-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.meal-macros {
+  margin: 12px 0;
+}
+
+.meal-macros span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.move-grid,
+.motivation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.move-card,
+.quote-card {
+  min-height: 100%;
+}
+
+.move-card-accent,
+.quote-card-accent {
+  background: linear-gradient(145deg, rgba(255, 106, 61, 0.12), rgba(255, 197, 90, 0.1));
+}
+
+.drink-buttons {
+  margin-bottom: 16px;
+}
+
+.drink-buttons button {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.alcohol-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.quote-list {
+  padding-left: 18px;
+  margin: 12px 0 0;
+  line-height: 1.7;
+}
+
+.footer-note {
+  padding: 18px 4px 6px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(24px);
+  min-width: 220px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(17, 21, 30, 0.94);
+  color: white;
+  box-shadow: 0 14px 34px rgba(17, 21, 30, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 30;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 21, 30, 0.5);
+  padding: 16px;
+  z-index: 40;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-card {
+  width: min(420px, 100%);
+  padding: 22px;
+  border-radius: var(--radius-xl);
+  background: #17191f;
+  color: var(--text-light);
+  box-shadow: 0 22px 60px rgba(17, 21, 30, 0.35);
+}
+
+.modal-card .eyebrow {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.modal-card .support-text {
+  color: rgba(255, 255, 255, 0.78);
+  margin-top: 10px;
+}
+
+.modal-actions {
+  margin-top: 18px;
+}
+
+@media (max-width: 980px) {
+  .hero,
+  .command-grid,
+  .meal-layout,
+  .move-grid,
+  .motivation-grid,
+  .restaurant-columns,
+  .restaurant-form,
+  .rule-list,
+  .alcohol-summary,
+  .tracker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .phase-panel,
+  .warning-panel,
+  .tracker-panel,
+  .goals-panel,
+  .sitstand-panel,
+  .movement-timer-panel,
+  .move-panel,
+  .alcohol-panel {
+    grid-column: span 12;
+  }
+
+  .hero {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .hero,
+  .phase-panel,
+  .warning-panel,
+  .tracker-panel,
+  .goals-panel,
+  .sitstand-panel,
+  .movement-timer-panel,
+  .schedule-panel,
+  .timeline-panel,
+  .meal-panel,
+  .restaurant-panel,
+  .move-panel,
+  .alcohol-panel,
+  .motivation-panel {
+    padding: 18px;
+  }
+
+  .panel-head,
+  .task-subhead,
+  .task-top,
+  .meal-top,
+  .timeline-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  h1 {
+    max-width: 11ch;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .modal-actions,
+  .task-actions,
+  .hero-actions,
+  .tracker-actions,
+  .timer-controls,
+  .restaurant-actions,
+  .drink-buttons,
+  .steps-row {
+    flex-direction: column;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .ghost-button,
+  .task-actions button,
+  .meal-card button,
+  .drink-buttons button,
+  .tracker-actions button,
+  .restaurant-actions button,
+  .timer-controls button {
+    width: 100%;
+  }
+
+  .quote-list {
+    padding-left: 16px;
+  }
+}
