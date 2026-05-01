@@ -29,7 +29,24 @@
     <div class="ambient ambient-two"></div>
 
     <main class="app-shell">
-      <header class="hero panel">
+      <nav class="page-menu panel" aria-label="DietHawk sections">
+        <div class="page-menu-top">
+          <div>
+            <p class="eyebrow">Command Menu</p>
+            <h2 id="current-page-label">Today</h2>
+          </div>
+          <p class="support-text page-menu-copy">Use the menu. Stop scrolling through the whole app like it is a ransom note.</p>
+        </div>
+        <div class="page-links" role="tablist" aria-label="DietHawk pages">
+          <a class="page-link active" data-page-link="today" href="#today">Today</a>
+          <a class="page-link" data-page-link="schedule" href="#schedule">Schedule</a>
+          <a class="page-link" data-page-link="meals" href="#meals">Meals</a>
+          <a class="page-link" data-page-link="restaurant" href="#restaurant">Restaurant</a>
+          <a class="page-link" data-page-link="memory" href="#memory">Memory</a>
+        </div>
+      </nav>
+
+      <header class="hero panel" data-page-section="today">
         <div class="hero-copy">
           <p class="eyebrow">Daily Keto Command</p>
           <h1>No bargaining. Follow the plan.</h1>
@@ -78,7 +95,7 @@
         </div>
       </header>
 
-      <section class="command-grid">
+      <section class="command-grid" data-page-section="today">
         <article class="panel phase-panel">
           <div class="panel-head">
             <div>
@@ -175,7 +192,7 @@
         </article>
       </section>
 
-      <section class="command-grid timer-grid">
+      <section class="command-grid timer-grid" data-page-section="schedule">
         <article class="panel sitstand-panel">
           <div class="panel-head compact">
             <div>
@@ -221,7 +238,7 @@
         </article>
       </section>
 
-      <section class="panel schedule-panel">
+      <section class="panel schedule-panel" data-page-section="schedule">
         <div class="panel-head compact">
           <div>
             <p class="eyebrow">Task Queue</p>
@@ -235,7 +252,7 @@
         <div id="task-list" class="task-list"></div>
       </section>
 
-      <section class="panel timeline-panel">
+      <section class="panel timeline-panel" data-page-section="schedule">
         <div class="panel-head compact">
           <div>
             <p class="eyebrow">Day Plan</p>
@@ -245,7 +262,7 @@
         <div id="timeline-list" class="timeline-list"></div>
       </section>
 
-      <section class="meal-layout">
+      <section class="meal-layout" data-page-section="meals">
         <article class="panel meal-panel">
           <div class="panel-head compact">
             <div>
@@ -287,7 +304,7 @@
         </article>
       </section>
 
-      <section class="command-grid lower-grid">
+      <section class="command-grid lower-grid" data-page-section="meals">
         <article class="panel move-panel">
           <div class="panel-head compact">
             <div>
@@ -336,7 +353,7 @@
         </article>
       </section>
 
-      <section class="panel restaurant-panel">
+      <section class="panel restaurant-panel" data-page-section="restaurant">
         <div class="panel-head compact">
           <div>
             <p class="eyebrow">Restaurant Audit</p>
@@ -404,7 +421,41 @@
         </div>
       </section>
 
-      <section class="panel motivation-panel">
+      <section class="panel memory-panel" data-page-section="memory">
+        <div class="panel-head compact">
+          <div>
+            <p class="eyebrow">DietHawk Memory</p>
+            <h2>What this app remembers</h2>
+          </div>
+        </div>
+        <p id="memory-overview" class="support-text">
+          This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.
+        </p>
+        <div class="warning-chips">
+          <span class="warning-chip" id="memory-stats-restaurants">0 places remembered</span>
+          <span class="warning-chip" id="memory-stats-audits">0 recent audits</span>
+          <span class="warning-chip" id="memory-stats-meals">0 recurring meals</span>
+        </div>
+        <div id="restaurant-memory-callout" class="memory-callout">
+          Type a restaurant name or run an audit and the memory layer will start stacking repeated safe bets here.
+        </div>
+        <div class="restaurant-columns memory-columns">
+          <section class="restaurant-column">
+            <h3>Restaurant memory</h3>
+            <div id="memory-restaurant-list" class="restaurant-option-list"></div>
+          </section>
+          <section class="restaurant-column">
+            <h3>Recurring meals</h3>
+            <div id="memory-meal-list" class="restaurant-option-list"></div>
+          </section>
+        </div>
+        <div class="restaurant-actions">
+          <button class="ghost-button" id="export-memory" type="button">Export Memory</button>
+          <button class="ghost-button" id="clear-memory" type="button">Clear Memory</button>
+        </div>
+      </section>
+
+      <section class="panel motivation-panel" data-page-section="memory">
         <div class="panel-head compact">
           <div>
             <p class="eyebrow">Daily Motivation</p>

@@ -412,8 +412,17 @@ const MINDSET_MESSAGES = [
 const STORAGE_PREFIX = "diethawk-day-";
 const MOVE_STORAGE_KEY = "diethawk-moves";
 const INSTALL_DISMISS_KEY = "diethawk-install-dismissed";
+const MEMORY_STORAGE_KEY = "diethawk-memory-v1";
+const PAGE_LABELS = {
+  today: "Today",
+  schedule: "Schedule",
+  meals: "Meals",
+  restaurant: "Restaurant",
+  memory: "Memory",
+};
 
 let state = loadState();
+let memory = loadMemory();
 let activeModalTaskId = null;
 let toastTimer = null;
 let tesseractLoaderPromise = null;
@@ -424,6 +433,7 @@ function init() {
   renderMeals();
   renderDrinkButtons();
   bindEvents();
+  renderPageNavigation();
   refreshAll();
   registerServiceWorker();
   maybeAlertForDueTask();
@@ -450,6 +460,18 @@ function tick() {
 }
 
 function bindEvents() {
+  window.addEventListener("hashchange", () => {
+    renderPageNavigation();
+  });
+
+  document.querySelectorAll("[data-page-link]").forEach((link) => {
+    link.addEventListener("click", () => {
+      window.requestAnimationFrame(() => {
+        renderPageNavigation();
+      });
+    });
+  });
+
   document.getElementById("enable-notifications").addEventListener("click", requestNotifications);
   document.getElementById("refresh-mindset").addEventListener("click", () => {
     state.mindsetIndex = (state.mindsetIndex + 1) % MINDSET_MESSAGES.length;
@@ -472,6 +494,7 @@ function bindEvents() {
   document.getElementById("restaurant-name").addEventListener("input", (event) => {
     state.restaurantAudit.restaurantName = event.target.value;
     saveState();
+    renderMemory();
   });
 
   document.getElementById("restaurant-name").addEventListener("keydown", (event) => {
@@ -503,6 +526,14 @@ function bindEvents() {
 
   document.getElementById("clear-restaurant").addEventListener("click", () => {
     clearRestaurantAudit();
+  });
+
+  document.getElementById("export-memory").addEventListener("click", () => {
+    exportMemory();
+  });
+
+  document.getElementById("clear-memory").addEventListener("click", () => {
+    clearMemory();
   });
 
   document.getElementById("dismiss-install").addEventListener("click", () => {
@@ -664,11 +695,13 @@ function renderMoves() {
 
 function refreshAll() {
   renderInstallState();
+  renderPageNavigation();
   renderPhase();
   renderLocalClock();
   renderCategoryTimers();
   renderMovementTimer();
   renderRestaurantAudit();
+  renderMemory();
   renderWarnings();
   renderTotals();
   renderGoals();
@@ -677,6 +710,31 @@ function refreshAll() {
   renderMoves();
   renderAlcohol();
   document.getElementById("steps-input").value = String(state.steps || 0);
+}
+
+function getCurrentPage() {
+  const nextPage = window.location.hash.replace(/^#/, "").trim().toLowerCase();
+  return PAGE_LABELS[nextPage] ? nextPage : "today";
+}
+
+function renderPageNavigation() {
+  const currentPage = getCurrentPage();
+  const currentPageLabel = document.getElementById("current-page-label");
+  currentPageLabel.textContent = PAGE_LABELS[currentPage];
+
+  document.querySelectorAll("[data-page-link]").forEach((link) => {
+    const isActive = link.dataset.pageLink === currentPage;
+    link.classList.toggle("active", isActive);
+    if (isActive) {
+      link.setAttribute("aria-current", "page");
+      return;
+    }
+    link.removeAttribute("aria-current");
+  });
+
+  document.querySelectorAll("[data-page-section]").forEach((section) => {
+    section.classList.toggle("page-hidden", section.dataset.pageSection !== currentPage);
+  });
 }
 
 function renderInstallState() {
@@ -1120,6 +1178,82 @@ function renderRestaurantOptionList(elementId, items, emptyMessage, tone) {
     .join("");
 }
 
+function renderMemory() {
+  const restaurantCount = memory.restaurants.entries.length;
+  const auditCount = memory.restaurants.recentAudits.length;
+  const mealCount = memory.preferences.favoriteMeals.length;
+  const currentRestaurantName = (state.restaurantAudit.restaurantName || "").trim();
+  const currentRestaurantMemory = getRestaurantMemoryFor(currentRestaurantName);
+
+  document.getElementById("memory-overview").textContent = restaurantCount || mealCount
+    ? "DietHawk now remembers repeated restaurants and meal patterns across days. That means less rework and better repeated calls."
+    : "This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.";
+  document.getElementById("memory-stats-restaurants").textContent = `${restaurantCount} ${restaurantCount === 1 ? "place" : "places"} remembered`;
+  document.getElementById("memory-stats-audits").textContent = `${auditCount} recent ${auditCount === 1 ? "audit" : "audits"}`;
+  document.getElementById("memory-stats-meals").textContent = `${mealCount} recurring ${mealCount === 1 ? "meal" : "meals"}`;
+
+  const callout = document.getElementById("restaurant-memory-callout");
+  if (currentRestaurantMemory) {
+    const rememberedSafeBets = currentRestaurantMemory.safeBets.length
+      ? currentRestaurantMemory.safeBets.slice(0, 3).map((item) => item.title).join(", ")
+      : "No saved best bets yet";
+    callout.innerHTML = `
+      <strong>${escapeHtml(currentRestaurantMemory.name)}</strong> has been audited ${currentRestaurantMemory.count} ${currentRestaurantMemory.count === 1 ? "time" : "times"}.<br />
+      Last check: ${escapeHtml(formatMemoryTimestamp(currentRestaurantMemory.lastCheckedAt))}.<br />
+      Remembered workable picks: ${escapeHtml(rememberedSafeBets)}.
+    `;
+  } else if (currentRestaurantName) {
+    callout.textContent = `No saved memory for ${currentRestaurantName} yet. Audit it once and this panel will remember the least-stupid picks.`;
+  } else {
+    callout.textContent = "Type a restaurant name or run an audit and the memory layer will start stacking repeated safe bets here.";
+  }
+
+  renderMemoryRestaurantList();
+  renderMemoryMealList();
+}
+
+function renderMemoryRestaurantList() {
+  const root = document.getElementById("memory-restaurant-list");
+  if (!memory.restaurants.entries.length) {
+    root.innerHTML = '<div class="restaurant-empty">No restaurant memory yet. Run a few audits and repeated places will show up here.</div>';
+    return;
+  }
+
+  root.innerHTML = memory.restaurants.entries
+    .map((entry) => {
+      const rememberedSafeBets = entry.safeBets.length
+        ? entry.safeBets.slice(0, 2).map((item) => item.title).join(", ")
+        : "No safe bets saved yet";
+      const tone = entry.lastVerdictTone === "avoid" ? "bad" : "good";
+      return `
+        <article class="restaurant-option ${tone}">
+          <h4>${escapeHtml(entry.name)}</h4>
+          <p>${escapeHtml(rememberedSafeBets)}</p>
+          <p class="memory-meta">${escapeHtml(formatMemoryTimestamp(entry.lastCheckedAt))} • ${escapeHtml(entry.lastSourceLabel || "Saved from audit")}</p>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderMemoryMealList() {
+  const root = document.getElementById("memory-meal-list");
+  if (!memory.preferences.favoriteMeals.length) {
+    root.innerHTML = '<div class="restaurant-empty">No meal patterns yet. Log a few meals and the repeats will surface here.</div>';
+    return;
+  }
+
+  root.innerHTML = memory.preferences.favoriteMeals
+    .map((entry) => `
+      <article class="restaurant-option good">
+        <h4>${escapeHtml(entry.name)}</h4>
+        <p>${escapeHtml(entry.group)} logged ${entry.count} ${entry.count === 1 ? "time" : "times"}.</p>
+        <p class="memory-meta">Last logged ${escapeHtml(formatMemoryTimestamp(entry.lastLoggedAt))}</p>
+      </article>
+    `)
+    .join("");
+}
+
 async function analyzeRestaurant() {
   const restaurantName = document.getElementById("restaurant-name").value.trim();
   const menuUrl = document.getElementById("restaurant-url").value.trim();
@@ -1146,22 +1280,26 @@ async function analyzeRestaurant() {
 
   try {
     const lookup = await lookupRestaurantMenu({ restaurantName, menuUrl, pastedMenuText });
+    const resolvedRestaurantName = restaurantName || inferRestaurantNameFromUrl(lookup.sourceUrl);
     const sourceLabel = lookup.sourceLabel === "Pasted menu text" && currentAudit.photoName
       ? `Screenshot OCR: ${currentAudit.photoName}`
       : lookup.sourceLabel;
-    const analysis = analyzeRestaurantMenu({
-      restaurantName: restaurantName || inferRestaurantNameFromUrl(lookup.sourceUrl),
-      menuText: lookup.menuText,
-      sourceLabel,
-      sourceUrl: lookup.sourceUrl,
-    });
+    const analysis = applyRestaurantMemory(
+      analyzeRestaurantMenu({
+        restaurantName: resolvedRestaurantName,
+        menuText: lookup.menuText,
+        sourceLabel,
+        sourceUrl: lookup.sourceUrl,
+      }),
+      resolvedRestaurantName,
+    );
 
     state.restaurantAudit = {
       ...buildDefaultRestaurantAudit(),
       photoName: currentAudit.photoName,
       ocrStatus: currentAudit.photoName ? "OCR complete" : currentAudit.ocrStatus,
       ocrProgress: currentAudit.ocrProgress,
-      restaurantName,
+      restaurantName: resolvedRestaurantName,
       menuUrl,
       ...analysis,
       sourceLabel,
@@ -1169,7 +1307,9 @@ async function analyzeRestaurant() {
       checkedAt: Date.now(),
     };
     saveState();
+    rememberRestaurantAudit(state.restaurantAudit);
     renderRestaurantAudit();
+    renderMemory();
     showToast("Restaurant audit ready.");
   } catch (error) {
     state.restaurantAudit = {
@@ -1198,6 +1338,7 @@ function clearRestaurantAudit() {
   document.getElementById("restaurant-menu-text").value = "";
   saveState();
   renderRestaurantAudit();
+  renderMemory();
   showToast("Restaurant audit cleared.");
 }
 
@@ -1819,9 +1960,269 @@ function logMeal(mealId, group) {
     carbs: meal.carbs,
     loggedAt: new Date().toISOString(),
   });
+  rememberMeal(meal, group);
   saveState();
   refreshAll();
   showToast(`${meal.name} logged.`);
+}
+
+function buildDefaultMemory() {
+  return {
+    version: 1,
+    updatedAt: null,
+    preferences: {
+      coachingTone: "hardline",
+      favoriteMeals: [],
+    },
+    restaurants: {
+      entries: [],
+      recentAudits: [],
+    },
+  };
+}
+
+function normalizeMemory(memoryState) {
+  const defaults = buildDefaultMemory();
+  return {
+    ...defaults,
+    ...memoryState,
+    updatedAt: typeof memoryState?.updatedAt === "string" ? memoryState.updatedAt : defaults.updatedAt,
+    preferences: {
+      coachingTone: typeof memoryState?.preferences?.coachingTone === "string"
+        ? memoryState.preferences.coachingTone
+        : defaults.preferences.coachingTone,
+      favoriteMeals: Array.isArray(memoryState?.preferences?.favoriteMeals)
+        ? memoryState.preferences.favoriteMeals
+            .filter((item) => item && typeof item.id === "string" && typeof item.name === "string")
+            .map((item) => ({
+              id: item.id,
+              name: item.name,
+              group: typeof item.group === "string" ? item.group : "meal",
+              count: Number.isFinite(item.count) ? item.count : 1,
+              lastLoggedAt: typeof item.lastLoggedAt === "string" ? item.lastLoggedAt : new Date().toISOString(),
+            }))
+            .slice(0, 8)
+        : defaults.preferences.favoriteMeals,
+    },
+    restaurants: {
+      entries: Array.isArray(memoryState?.restaurants?.entries)
+        ? memoryState.restaurants.entries
+            .filter((item) => item && typeof item.name === "string")
+            .map((item) => ({
+              name: item.name,
+              normalizedName: typeof item.normalizedName === "string" ? item.normalizedName : normalizeMemoryKey(item.name),
+              count: Number.isFinite(item.count) ? item.count : 1,
+              lastCheckedAt: Number.isFinite(item.lastCheckedAt) ? item.lastCheckedAt : Date.now(),
+              lastVerdictTone: typeof item.lastVerdictTone === "string" ? item.lastVerdictTone : "idle",
+              lastVerdict: typeof item.lastVerdict === "string" ? item.lastVerdict : "",
+              lastSourceLabel: typeof item.lastSourceLabel === "string" ? item.lastSourceLabel : "",
+              safeBets: normalizeMemoryOptions(item.safeBets),
+              avoids: normalizeMemoryOptions(item.avoids),
+            }))
+            .slice(0, 12)
+        : defaults.restaurants.entries,
+      recentAudits: Array.isArray(memoryState?.restaurants?.recentAudits)
+        ? memoryState.restaurants.recentAudits
+            .filter((item) => item && typeof item.name === "string")
+            .map((item) => ({
+              name: item.name,
+              normalizedName: typeof item.normalizedName === "string" ? item.normalizedName : normalizeMemoryKey(item.name),
+              checkedAt: Number.isFinite(item.checkedAt) ? item.checkedAt : Date.now(),
+              verdictTone: typeof item.verdictTone === "string" ? item.verdictTone : "idle",
+              sourceLabel: typeof item.sourceLabel === "string" ? item.sourceLabel : "",
+              safeBets: normalizeMemoryOptions(item.safeBets),
+              avoids: normalizeMemoryOptions(item.avoids),
+            }))
+            .slice(0, 8)
+        : defaults.restaurants.recentAudits,
+    },
+  };
+}
+
+function normalizeMemoryOptions(items) {
+  return Array.isArray(items)
+    ? items
+        .filter((item) => item && typeof item.title === "string" && typeof item.note === "string")
+        .map((item) => ({ title: item.title, note: item.note }))
+        .slice(0, 5)
+    : [];
+}
+
+function loadMemory() {
+  const raw = window.localStorage.getItem(MEMORY_STORAGE_KEY);
+  if (!raw) {
+    return buildDefaultMemory();
+  }
+
+  try {
+    return normalizeMemory(JSON.parse(raw));
+  } catch {
+    return buildDefaultMemory();
+  }
+}
+
+function saveMemory() {
+  memory.updatedAt = new Date().toISOString();
+  window.localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memory));
+}
+
+function normalizeMemoryKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getRestaurantMemoryFor(restaurantName) {
+  const normalizedName = normalizeMemoryKey(restaurantName);
+  if (!normalizedName) {
+    return null;
+  }
+  return memory.restaurants.entries.find((entry) => entry.normalizedName === normalizedName) || null;
+}
+
+function rememberRestaurantAudit(audit) {
+  const name = (audit.restaurantName || inferRestaurantNameFromUrl(audit.sourceUrl)).trim();
+  const normalizedName = normalizeMemoryKey(name);
+  if (!normalizedName) {
+    return;
+  }
+
+  const existingEntry = getRestaurantMemoryFor(name);
+  const nextEntry = {
+    name,
+    normalizedName,
+    count: (existingEntry?.count || 0) + 1,
+    lastCheckedAt: Number.isFinite(audit.checkedAt) ? audit.checkedAt : Date.now(),
+    lastVerdictTone: audit.verdictTone || "idle",
+    lastVerdict: audit.verdict || "",
+    lastSourceLabel: audit.sourceLabel || "",
+    safeBets: mergeMemoryOptions(existingEntry?.safeBets || [], audit.goodOptions || []),
+    avoids: mergeMemoryOptions(existingEntry?.avoids || [], audit.badOptions || []),
+  };
+
+  memory.restaurants.entries = [
+    nextEntry,
+    ...memory.restaurants.entries.filter((entry) => entry.normalizedName !== normalizedName),
+  ]
+    .sort((left, right) => right.lastCheckedAt - left.lastCheckedAt)
+    .slice(0, 12);
+
+  memory.restaurants.recentAudits = [
+    {
+      name,
+      normalizedName,
+      checkedAt: nextEntry.lastCheckedAt,
+      verdictTone: audit.verdictTone || "idle",
+      sourceLabel: audit.sourceLabel || "",
+      safeBets: normalizeMemoryOptions(audit.goodOptions).slice(0, 3),
+      avoids: normalizeMemoryOptions(audit.badOptions).slice(0, 3),
+    },
+    ...memory.restaurants.recentAudits.filter(
+      (entry) => !(entry.normalizedName === normalizedName && entry.checkedAt === nextEntry.lastCheckedAt),
+    ),
+  ].slice(0, 8);
+
+  saveMemory();
+}
+
+function rememberMeal(meal, group) {
+  const existingEntry = memory.preferences.favoriteMeals.find((entry) => entry.id === meal.id);
+  if (existingEntry) {
+    existingEntry.count += 1;
+    existingEntry.lastLoggedAt = new Date().toISOString();
+  } else {
+    memory.preferences.favoriteMeals.push({
+      id: meal.id,
+      name: meal.name,
+      group,
+      count: 1,
+      lastLoggedAt: new Date().toISOString(),
+    });
+  }
+
+  memory.preferences.favoriteMeals = memory.preferences.favoriteMeals
+    .slice()
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return new Date(right.lastLoggedAt).getTime() - new Date(left.lastLoggedAt).getTime();
+    })
+    .slice(0, 8);
+
+  saveMemory();
+}
+
+function mergeMemoryOptions(existingItems, nextItems) {
+  const merged = [];
+  const seen = new Set();
+
+  [...normalizeMemoryOptions(nextItems), ...normalizeMemoryOptions(existingItems)].forEach((item) => {
+    const key = item.title.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    merged.push(item);
+  });
+
+  return merged.slice(0, 5);
+}
+
+function applyRestaurantMemory(analysis, restaurantName) {
+  const remembered = getRestaurantMemoryFor(restaurantName);
+  if (!remembered) {
+    return analysis;
+  }
+
+  const noteBits = [`Memory: ${remembered.count} prior ${remembered.count === 1 ? "audit" : "audits"} for ${remembered.name}.`];
+  if (remembered.safeBets.length) {
+    noteBits.push(`Previous workable picks: ${remembered.safeBets.slice(0, 3).map((item) => item.title).join(", ")}.`);
+  }
+
+  return {
+    ...analysis,
+    notes: `${analysis.notes} ${noteBits.join(" ")}`.trim(),
+    goodOptions: analysis.goodOptions.length ? analysis.goodOptions : remembered.safeBets,
+  };
+}
+
+function formatMemoryTimestamp(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown time";
+  }
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function exportMemory() {
+  const blob = new Blob([JSON.stringify(memory, null, 2)], { type: "application/json" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `diethawk-memory-${getDateKey(new Date())}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+  showToast("Memory exported.");
+}
+
+function clearMemory() {
+  if (!window.confirm("Clear all stored DietHawk memory across days?")) {
+    return;
+  }
+  memory = buildDefaultMemory();
+  saveMemory();
+  renderMemory();
+  showToast("Memory cleared.");
 }
 
 function logDrink(drinkId) {

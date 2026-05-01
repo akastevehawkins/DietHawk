@@ -82,6 +82,61 @@ button {
   margin: 0 auto;
 }
 
+.page-menu {
+  position: sticky;
+  top: calc(10px + env(safe-area-inset-top));
+  z-index: 15;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+}
+
+.page-menu-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.page-menu-copy {
+  max-width: 34ch;
+}
+
+.page-links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.page-link:hover,
+.page-link.active {
+  transform: translateY(-1px);
+}
+
+.page-link.active {
+  background: linear-gradient(135deg, rgba(255, 106, 61, 0.22), rgba(255, 197, 90, 0.2));
+  border-color: rgba(255, 197, 90, 0.32);
+}
+
+.page-hidden {
+  display: none !important;
+}
+
 .panel {
   position: relative;
   overflow: hidden;
@@ -142,6 +197,7 @@ button {
 .move-panel .eyebrow,
 .alcohol-panel .eyebrow,
 .motivation-panel .eyebrow,
+.memory-panel .eyebrow,
 .sitstand-panel .eyebrow,
 .movement-timer-panel .eyebrow {
   color: rgba(166, 175, 190, 0.88);
@@ -361,6 +417,7 @@ p {
 .timeline-panel,
 .meal-panel,
 .restaurant-panel,
+.memory-panel,
 .move-panel,
 .alcohol-panel,
 .motivation-panel {
@@ -749,6 +806,25 @@ p {
   border-color: rgba(255, 106, 61, 0.24);
 }
 
+.memory-callout {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(52, 211, 194, 0.18);
+  background: rgba(52, 211, 194, 0.08);
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.memory-columns {
+  margin-top: 14px;
+}
+
+.memory-meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .goal-head span:last-child {
   font-weight: 700;
 }
@@ -1032,12 +1108,14 @@ p {
   .timeline-panel,
   .meal-panel,
   .restaurant-panel,
+  .memory-panel,
   .move-panel,
   .alcohol-panel,
   .motivation-panel {
     padding: 18px;
   }
 
+  .page-menu-top,
   .panel-head,
   .task-subhead,
   .task-top,
@@ -1080,5 +1158,11 @@ p {
 
   .quote-list {
     padding-left: 16px;
+  }
+
+  .page-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
 }
