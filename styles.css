@@ -1163,6 +1163,10 @@ p {
     padding-right: 12px;
   }
 
+  .page-menu {
+    margin-bottom: 28px;
+  }
+
   .hero,
   .phase-panel,
   .warning-panel,
