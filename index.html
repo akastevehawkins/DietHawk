@@ -178,6 +178,12 @@
                 <input id="steps-input" type="number" min="0" step="100" inputmode="numeric" />
                 <button class="primary-button small" id="save-steps" type="button">Update</button>
               </div>
+              <div class="warning-chips steps-meta">
+                <span class="warning-chip" id="steps-source-chip">Manual update</span>
+              </div>
+              <p id="steps-sync-note" class="support-text steps-sync-note">
+                Direct Apple Health sync is not available in a GitHub Pages web app. Manual entry works now, and Shortcut imports can bridge it later.
+              </p>
             </section>
           </div>
 
@@ -353,6 +359,46 @@
             </div>
           </div>
           <p id="alcohol-warning" class="warning-message minor"></p>
+          <p class="support-text alcohol-learning-copy">
+            Preset buttons track the standard stuff and teach the app your usual pattern. If you drank something else, type it so the memory stops guessing.
+          </p>
+          <div class="learning-inline">
+            <input id="actual-drink-input" type="text" placeholder="Old fashioned, tequila soda, dry martini" autocomplete="off" />
+            <button class="primary-button small" id="save-actual-drink" type="button">Learn drink</button>
+          </div>
+          <div id="actual-drink-learning-list" class="restaurant-option-list compact-learning-list"></div>
+        </article>
+
+        <article class="panel learning-panel">
+          <div class="panel-head compact">
+            <div>
+              <p class="eyebrow">Actual Meal Learning</p>
+              <h2>Tell the app what you really ate</h2>
+            </div>
+          </div>
+          <p class="support-text">
+            If the suggestions were close but not right, type the actual meal. This teaches preferences without pretending the macro guess was accurate.
+          </p>
+          <div class="learning-form">
+            <label class="restaurant-field">
+              <span>Meal slot</span>
+              <select id="actual-meal-context">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snack">Snack</option>
+                <option value="restaurant">Restaurant</option>
+              </select>
+            </label>
+            <label class="restaurant-field restaurant-field-wide">
+              <span>What I actually ate</span>
+              <input id="actual-meal-input" type="text" placeholder="Turkey lettuce wrap, salmon salad, steak bowl no rice" autocomplete="off" />
+            </label>
+          </div>
+          <div class="restaurant-actions">
+            <button class="primary-button small" id="save-actual-meal" type="button">Learn this meal</button>
+          </div>
+          <div id="actual-meal-learning-list" class="restaurant-option-list"></div>
         </article>
       </section>
 
@@ -417,10 +463,14 @@
               <div id="restaurant-good-options" class="restaurant-option-list"></div>
             </section>
             <section class="restaurant-column">
-              <h3>Leave these alone</h3>
-              <div id="restaurant-bad-options" class="restaurant-option-list"></div>
+              <h3>Alternates if not for you</h3>
+              <div id="restaurant-alternate-options" class="restaurant-option-list"></div>
             </section>
           </div>
+          <section class="restaurant-secondary-section">
+            <h3>Leave these alone</h3>
+            <div id="restaurant-bad-options" class="restaurant-option-list"></div>
+          </section>
         </div>
       </section>
 
@@ -439,6 +489,7 @@
           <span class="warning-chip" id="memory-stats-audits">0 recent audits</span>
           <span class="warning-chip" id="memory-stats-meals">0 recurring meals</span>
           <span class="warning-chip" id="memory-stats-orders">0 repeated safe orders</span>
+          <span class="warning-chip" id="memory-stats-drinks">0 recurring drinks</span>
           <span class="warning-chip" id="memory-stats-dislikes">0 disliked foods</span>
         </div>
         <div id="restaurant-memory-callout" class="memory-callout">
@@ -450,7 +501,7 @@
             <div id="memory-restaurant-list" class="restaurant-option-list"></div>
           </section>
           <section class="restaurant-column">
-            <h3>Repeated safe orders</h3>
+            <h3>Repeated actual orders</h3>
             <div id="memory-order-list" class="restaurant-option-list"></div>
           </section>
         </div>
@@ -460,15 +511,19 @@
             <div id="memory-meal-list" class="restaurant-option-list"></div>
           </section>
           <section class="restaurant-column">
-            <h3>Disliked foods</h3>
-            <p class="support-text">Add foods Steve wants flagged so meals and restaurant calls stop pretending he likes them.</p>
-            <div class="memory-disliked-controls">
-              <input id="disliked-food-input" type="text" placeholder="Onions, blue cheese, pork rinds" autocomplete="off" />
-              <button class="primary-button small" id="add-disliked-food" type="button">Add</button>
-            </div>
-            <div id="memory-disliked-list" class="warning-chips memory-chip-list"></div>
+            <h3>Recurring drinks</h3>
+            <div id="memory-drink-list" class="restaurant-option-list"></div>
           </section>
         </div>
+        <section class="restaurant-column memory-wide-column">
+          <h3>Disliked foods</h3>
+          <p class="support-text">Add foods Steve wants flagged so meals and restaurant calls stop pretending he likes them.</p>
+          <div class="memory-disliked-controls">
+            <input id="disliked-food-input" type="text" placeholder="Onions, blue cheese, pork rinds" autocomplete="off" />
+            <button class="primary-button small" id="add-disliked-food" type="button">Add</button>
+          </div>
+          <div id="memory-disliked-list" class="warning-chips memory-chip-list"></div>
+        </section>
         <div class="restaurant-actions">
           <button class="ghost-button" id="export-memory" type="button">Export Memory</button>
           <button class="ghost-button" id="clear-memory" type="button">Clear Memory</button>

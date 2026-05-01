@@ -501,6 +501,7 @@ let memorySyncState = {
 };
 
 function init() {
+  const stepsImportMessage = maybeImportStepsFromQuery();
   renderProfile();
   renderMindset();
   renderMeals();
@@ -513,6 +514,9 @@ function init() {
   registerServiceWorker();
   maybeAlertForDueTask();
   maybeAlertForMovementTimer();
+  if (stepsImportMessage) {
+    showToast(stepsImportMessage);
+  }
   setInterval(liveTick, 1000);
   setInterval(tick, 1000 * 30);
 }
@@ -611,6 +615,30 @@ function bindEvents() {
     clearMemory();
   });
 
+  document.getElementById("save-actual-meal").addEventListener("click", () => {
+    handleSaveActualMeal();
+  });
+
+  document.getElementById("actual-meal-input").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    handleSaveActualMeal();
+  });
+
+  document.getElementById("save-actual-drink").addEventListener("click", () => {
+    handleSaveActualDrink();
+  });
+
+  document.getElementById("actual-drink-input").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    handleSaveActualDrink();
+  });
+
   document.getElementById("add-disliked-food").addEventListener("click", () => {
     const input = document.getElementById("disliked-food-input");
     addDislikedFood(input.value);
@@ -657,10 +685,23 @@ function bindEvents() {
       showToast("Use a real step number.");
       return;
     }
-    state.steps = nextValue;
-    saveState();
+    setStepsValue(nextValue, "manual");
     refreshAll();
     showToast("Steps updated.");
+  });
+
+  document.getElementById("steps-input").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    document.getElementById("save-steps").click();
+  });
+
+  ["restaurant-good-options", "restaurant-alternate-options"].forEach((elementId) => {
+    document.getElementById(elementId).addEventListener("click", (event) => {
+      handleRestaurantOptionAction(event);
+    });
   });
 
   document.querySelectorAll("[data-action='water-adjust']").forEach((button) => {
@@ -736,10 +777,20 @@ function renderMindset() {
 function renderMeals() {
   Object.entries(MEAL_LIBRARY).forEach(([group, meals]) => {
     const root = document.getElementById(`${group}-meals`);
-    root.innerHTML = meals
+    const sortedMeals = meals.slice().sort((left, right) => {
+      const leftCount = memory.preferences.favoriteMeals.find((entry) => entry.id === left.id)?.count || 0;
+      const rightCount = memory.preferences.favoriteMeals.find((entry) => entry.id === right.id)?.count || 0;
+      if (rightCount !== leftCount) {
+        return rightCount - leftCount;
+      }
+      return left.name.localeCompare(right.name);
+    });
+
+    root.innerHTML = sortedMeals
       .map((meal) => {
         const guidance = [];
         const dislikedMatches = getDislikedFoodMatches(`${meal.name} ${meal.note}`);
+        const repeatCount = memory.preferences.favoriteMeals.find((entry) => entry.id === meal.id)?.count || 0;
         if (meal.heartScore > 0) {
           guidance.push("Better fit for the cholesterol problem: leaner protein, cleaner fats, or more fiber-heavy veg.");
         } else if (meal.heartScore < 0) {
@@ -747,6 +798,9 @@ function renderMeals() {
         }
         if (dislikedMatches.length) {
           guidance.push(`Contains a saved avoid food: ${dislikedMatches.join(", ")}.`);
+        }
+        if (repeatCount > 0) {
+          guidance.push(`You have actually logged this ${repeatCount} ${repeatCount === 1 ? "time" : "times"}.`);
         }
 
         return `
@@ -771,6 +825,8 @@ function renderMeals() {
       .join("");
   });
 
+  renderActualMealLearning();
+
   document.querySelectorAll("[data-meal-id]").forEach((button) => {
     button.addEventListener("click", () => {
       logMeal(button.dataset.mealId, button.dataset.mealGroup);
@@ -780,7 +836,16 @@ function renderMeals() {
 
 function renderDrinkButtons() {
   const root = document.getElementById("drink-buttons");
-  root.innerHTML = DRINK_LIBRARY.map(
+  const sortedDrinks = DRINK_LIBRARY.slice().sort((left, right) => {
+    const leftCount = getFavoriteDrinkEntries().find((entry) => entry.id === left.id)?.count || 0;
+    const rightCount = getFavoriteDrinkEntries().find((entry) => entry.id === right.id)?.count || 0;
+    if (rightCount !== leftCount) {
+      return rightCount - leftCount;
+    }
+    return left.name.localeCompare(right.name);
+  });
+
+  root.innerHTML = sortedDrinks.map(
     (drink) => `
       <button type="button" data-drink-id="${drink.id}">
         ${drink.name}<br />${drink.calories} cal / ${drink.carbs} g carbs
@@ -822,7 +887,73 @@ function refreshAll() {
   renderTimeline();
   renderMoves();
   renderAlcohol();
+  renderStepSyncState();
   document.getElementById("steps-input").value = String(state.steps || 0);
+}
+
+function renderActualMealLearning() {
+  const root = document.getElementById("actual-meal-learning-list");
+  if (!root) {
+    return;
+  }
+
+  const entries = getActualMealPreferenceEntries().slice(0, 4);
+  if (!entries.length) {
+    root.innerHTML = '<div class="restaurant-empty">No actual meals learned yet. Type what you really ate when the suggestions were close but not right.</div>';
+    return;
+  }
+
+  root.innerHTML = entries
+    .map((entry) => `
+      <article class="restaurant-option good">
+        <h4>${escapeHtml(entry.name)}</h4>
+        <p>${escapeHtml(entry.group)} learned ${entry.count} ${entry.count === 1 ? "time" : "times"}.</p>
+        <p class="memory-meta">Last saved ${escapeHtml(formatMemoryTimestamp(entry.lastLoggedAt))}</p>
+      </article>
+    `)
+    .join("");
+}
+
+function renderActualDrinkLearning() {
+  const root = document.getElementById("actual-drink-learning-list");
+  if (!root) {
+    return;
+  }
+
+  const entries = getFavoriteDrinkEntries().slice(0, 4);
+  if (!entries.length) {
+    root.innerHTML = '<div class="restaurant-empty">No drink pattern learned yet. Log a few actual drinks and the repeats will surface here.</div>';
+    return;
+  }
+
+  root.innerHTML = entries
+    .map((entry) => `
+      <article class="restaurant-option good">
+        <h4>${escapeHtml(entry.name)}</h4>
+        <p>Logged or learned ${entry.count} ${entry.count === 1 ? "time" : "times"}.</p>
+        <p class="memory-meta">Last noted ${escapeHtml(formatMemoryTimestamp(entry.lastLoggedAt))}</p>
+      </article>
+    `)
+    .join("");
+}
+
+function renderStepSyncState() {
+  const chip = document.getElementById("steps-source-chip");
+  const note = document.getElementById("steps-sync-note");
+  if (!chip || !note) {
+    return;
+  }
+
+  const sourceLabel = formatStepsSourceLabel(state.stepsSource);
+  chip.textContent = sourceLabel;
+  const lastUpdatedText = state.stepsUpdatedAt ? `Last update ${formatMemoryTimestamp(state.stepsUpdatedAt)}.` : "No imported step data yet.";
+
+  if (state.stepsSource === "apple-health-shortcut") {
+    note.textContent = `Direct Apple Health sync is not available in a GitHub Pages web app. Shortcut imports are supported instead. ${lastUpdatedText}`;
+    return;
+  }
+
+  note.textContent = `Direct Apple Health sync is not available in Safari/Home Screen web apps. Manual entry works now, and a Shortcut can open this app with a steps value for automatic import later. ${lastUpdatedText}`;
 }
 
 function getCurrentPage() {
@@ -1247,6 +1378,7 @@ function renderAlcohol() {
   }
 
   document.getElementById("alcohol-warning").textContent = message;
+  renderActualDrinkLearning();
 }
 
 function renderRestaurantAudit() {
@@ -1284,7 +1416,14 @@ function renderRestaurantAudit() {
     verdict.className = "restaurant-verdict loading";
     verdict.textContent = "Pulling the menu now. Sit still and let me read the damage.";
     notes.textContent = "Restaurant name alone is enough for a best-effort lookup. A direct menu URL is faster, and pasted menu text is the fallback when the website is a mess.";
-    renderRestaurantOptionList("restaurant-good-options", [], "No recommendations yet.", "good");
+    renderRestaurantOptionList("restaurant-good-options", [], "No recommendations yet.", "good", { interactive: true, listKey: "good" });
+    renderRestaurantOptionList(
+      "restaurant-alternate-options",
+      [],
+      "Alternates will show up after the first pass is scored.",
+      "good",
+      { interactive: true, listKey: "alternate" },
+    );
     renderRestaurantOptionList("restaurant-bad-options", [], "No warnings yet.", "bad");
     return;
   }
@@ -1293,7 +1432,14 @@ function renderRestaurantAudit() {
     verdict.className = "restaurant-verdict loading";
     verdict.textContent = "Reading the screenshot now. Hold still. A crooked menu photo gives crooked advice.";
     notes.textContent = "Get close, keep the menu flat, and fill the frame. The cleaner the shot, the less stupid the OCR output.";
-    renderRestaurantOptionList("restaurant-good-options", [], "OCR is still reading the menu photo.", "good");
+    renderRestaurantOptionList("restaurant-good-options", [], "OCR is still reading the menu photo.", "good", { interactive: true, listKey: "good" });
+    renderRestaurantOptionList(
+      "restaurant-alternate-options",
+      [],
+      "Alternates will populate once the menu text is usable.",
+      "good",
+      { interactive: true, listKey: "alternate" },
+    );
     renderRestaurantOptionList("restaurant-bad-options", [], "Warnings will populate after the text is extracted.", "bad");
     return;
   }
@@ -1307,6 +1453,14 @@ function renderRestaurantAudit() {
       [],
       "When the menu is loaded, the least-stupid options will land here.",
       "good",
+      { interactive: true, listKey: "good" },
+    );
+    renderRestaurantOptionList(
+      "restaurant-alternate-options",
+      [],
+      "Reject a suggestion and the next-best options will rotate in here.",
+      "good",
+      { interactive: true, listKey: "alternate" },
     );
     renderRestaurantOptionList(
       "restaurant-bad-options",
@@ -1327,6 +1481,16 @@ function renderRestaurantAudit() {
       ? "You are fasting, so the immediate answer is still no calories. Later options will show up here when the menu has anything salvageable."
       : "Nothing worth endorsing. That is the whole point of the audit.",
     "good",
+    { interactive: true, listKey: "good" },
+  );
+  renderRestaurantOptionList(
+    "restaurant-alternate-options",
+    audit.alternateOptions,
+    audit.rejectedOptions.length
+      ? "You rejected enough of the first picks that there is nothing better left to rotate in."
+      : "Reject a suggestion and the next best options will rotate in here.",
+    "good",
+    { interactive: true, listKey: "alternate" },
   );
   renderRestaurantOptionList(
     "restaurant-bad-options",
@@ -1336,19 +1500,27 @@ function renderRestaurantAudit() {
   );
 }
 
-function renderRestaurantOptionList(elementId, items, emptyMessage, tone) {
+function renderRestaurantOptionList(elementId, items, emptyMessage, tone, options = {}) {
   const root = document.getElementById(elementId);
   if (!items.length) {
     root.innerHTML = `<div class="restaurant-empty">${escapeHtml(emptyMessage)}</div>`;
     return;
   }
 
+  const interactive = Boolean(options.interactive) && tone !== "bad";
+  const listKey = options.listKey || elementId;
   root.innerHTML = items
     .map(
-      (item) => `
+      (item, index) => `
         <article class="restaurant-option ${tone}">
           <h4>${escapeHtml(item.title)}</h4>
           <p>${escapeHtml(item.note)}</p>
+          ${interactive ? `
+            <div class="restaurant-option-actions">
+              <button type="button" data-restaurant-option-action="ate" data-restaurant-option-list="${escapeHtml(listKey)}" data-restaurant-option-index="${index}">I ate this</button>
+              <button type="button" data-restaurant-option-action="reject" data-restaurant-option-list="${escapeHtml(listKey)}" data-restaurant-option-index="${index}">Not for me</button>
+            </div>
+          ` : ""}
         </article>
       `,
     )
@@ -1360,17 +1532,19 @@ function renderMemory() {
   const auditCount = memory.restaurants.recentAudits.length;
   const mealCount = memory.preferences.favoriteMeals.length;
   const orderCount = memory.preferences.favoriteOrders.length;
+  const drinkCount = memory.preferences.favoriteDrinks.length;
   const dislikedFoodCount = memory.preferences.dislikedFoods.length;
   const currentRestaurantName = (state.restaurantAudit.restaurantName || "").trim();
   const currentRestaurantMemory = getRestaurantMemoryFor(currentRestaurantName);
 
-  document.getElementById("memory-overview").textContent = restaurantCount || mealCount || orderCount || dislikedFoodCount
-    ? "DietHawk now remembers repeated restaurants, safe orders, disliked foods, and meal patterns across days. That means less rework and less pretending you forgot what already works."
+  document.getElementById("memory-overview").textContent = restaurantCount || mealCount || orderCount || drinkCount || dislikedFoodCount
+    ? "DietHawk now remembers repeated restaurants, actual chosen orders, disliked foods, meal patterns, and drink tendencies across days. That means less fake guessing and more steering toward what you really do."
     : "This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.";
   document.getElementById("memory-stats-restaurants").textContent = `${restaurantCount} ${restaurantCount === 1 ? "favorite restaurant" : "favorite restaurants"}`;
   document.getElementById("memory-stats-audits").textContent = `${auditCount} recent ${auditCount === 1 ? "audit" : "audits"}`;
   document.getElementById("memory-stats-meals").textContent = `${mealCount} recurring ${mealCount === 1 ? "meal" : "meals"}`;
-  document.getElementById("memory-stats-orders").textContent = `${orderCount} repeated ${orderCount === 1 ? "safe order" : "safe orders"}`;
+  document.getElementById("memory-stats-orders").textContent = `${orderCount} repeated ${orderCount === 1 ? "actual order" : "actual orders"}`;
+  document.getElementById("memory-stats-drinks").textContent = `${drinkCount} recurring ${drinkCount === 1 ? "drink" : "drinks"}`;
   document.getElementById("memory-stats-dislikes").textContent = `${dislikedFoodCount} disliked ${dislikedFoodCount === 1 ? "food" : "foods"}`;
 
   const callout = document.getElementById("restaurant-memory-callout");
@@ -1381,7 +1555,8 @@ function renderMemory() {
     callout.innerHTML = `
       <strong>${escapeHtml(currentRestaurantMemory.name)}</strong> has been audited ${currentRestaurantMemory.count} ${currentRestaurantMemory.count === 1 ? "time" : "times"}.<br />
       Last check: ${escapeHtml(formatMemoryTimestamp(currentRestaurantMemory.lastCheckedAt))}.<br />
-      Remembered workable picks: ${escapeHtml(rememberedSafeBets)}.
+      Remembered workable picks: ${escapeHtml(rememberedSafeBets)}.<br />
+      Rejected here before: ${escapeHtml(currentRestaurantMemory.rejectedOptions.length ? currentRestaurantMemory.rejectedOptions.join(", ") : "Nothing explicitly rejected yet")}.
     `;
   } else if (currentRestaurantName) {
     callout.textContent = `No saved memory for ${currentRestaurantName} yet. Audit it once and this panel will remember the least-stupid picks.`;
@@ -1392,6 +1567,7 @@ function renderMemory() {
   renderMemoryRestaurantList();
   renderFavoriteOrdersList();
   renderMemoryMealList();
+  renderFavoriteDrinkList();
   renderDislikedFoodList();
 }
 
@@ -1440,7 +1616,7 @@ function renderMemoryMealList() {
 function renderFavoriteOrdersList() {
   const root = document.getElementById("memory-order-list");
   if (!memory.preferences.favoriteOrders.length) {
-    root.innerHTML = '<div class="restaurant-empty">No repeated safe orders yet. Audit the same places a few times and the reliable picks will rise to the top.</div>';
+    root.innerHTML = '<div class="restaurant-empty">No actual picked orders yet. Tap "I ate this" on restaurant suggestions and the repeats will rise to the top.</div>';
     return;
   }
 
@@ -1450,6 +1626,28 @@ function renderFavoriteOrdersList() {
         <h4>${escapeHtml(entry.title)}</h4>
         <p>${escapeHtml(entry.restaurantName)} • learned ${entry.count} ${entry.count === 1 ? "time" : "times"}</p>
         <p class="memory-meta">${escapeHtml(entry.note)}</p>
+      </article>
+    `)
+    .join("");
+}
+
+function renderFavoriteDrinkList() {
+  const root = document.getElementById("memory-drink-list");
+  if (!root) {
+    return;
+  }
+
+  if (!memory.preferences.favoriteDrinks.length) {
+    root.innerHTML = '<div class="restaurant-empty">No drink tendencies saved yet. Use the drink buttons or the custom drink field and the repeats will show up here.</div>';
+    return;
+  }
+
+  root.innerHTML = memory.preferences.favoriteDrinks
+    .map((entry) => `
+      <article class="restaurant-option good">
+        <h4>${escapeHtml(entry.name)}</h4>
+        <p>Repeated ${entry.count} ${entry.count === 1 ? "time" : "times"}.</p>
+        <p class="memory-meta">Last logged ${escapeHtml(formatMemoryTimestamp(entry.lastLoggedAt))}</p>
       </article>
     `)
     .join("");
@@ -1841,11 +2039,13 @@ function analyzeRestaurantMenu({ restaurantName, menuText, sourceLabel, sourceUr
     .map((line) => evaluateMenuLine(line))
     .filter((item) => item && (item.score > 0 || item.status === "bad"));
 
-  const goodOptions = evaluations
+  const candidateOptions = evaluations
     .filter((item) => item.status === "good" || item.status === "conditional")
     .sort((left, right) => right.score - left.score)
-    .slice(0, 5)
+    .slice(0, 8)
     .map(({ title, note }) => ({ title, note }));
+
+  const goodOptions = candidateOptions.slice(0, 5);
 
   const badOptions = evaluations
     .filter((item) => item.status === "bad")
@@ -1876,6 +2076,9 @@ function analyzeRestaurantMenu({ restaurantName, menuText, sourceLabel, sourceUr
     verdictTone,
     verdict,
     notes: `${scheduleContext.message} ${heartNote} ${sourceText}`.trim(),
+    candidateOptions,
+    alternateOptions: [],
+    rejectedOptions: [],
     goodOptions,
     badOptions,
   };
@@ -2221,12 +2424,13 @@ function getHeartPlanStatus() {
 
 function buildDefaultMemory() {
   return {
-    version: 2,
+    version: 3,
     updatedAt: null,
     preferences: {
       coachingTone: "hardline",
       favoriteMeals: [],
       favoriteOrders: [],
+      favoriteDrinks: [],
       dislikedFoods: [],
     },
     restaurants: {
@@ -2271,6 +2475,17 @@ function normalizeMemory(memoryState) {
             }))
             .slice(0, 12)
         : defaults.preferences.favoriteOrders,
+      favoriteDrinks: Array.isArray(memoryState?.preferences?.favoriteDrinks)
+        ? memoryState.preferences.favoriteDrinks
+            .filter((item) => item && typeof item.name === "string")
+            .map((item) => ({
+              id: typeof item.id === "string" ? item.id : `drink:${normalizeMemoryKey(item.name)}`,
+              name: item.name,
+              count: Number.isFinite(item.count) ? item.count : 1,
+              lastLoggedAt: typeof item.lastLoggedAt === "string" ? item.lastLoggedAt : new Date().toISOString(),
+            }))
+            .slice(0, 10)
+        : defaults.preferences.favoriteDrinks,
       dislikedFoods: Array.isArray(memoryState?.preferences?.dislikedFoods)
         ? memoryState.preferences.dislikedFoods
             .filter((item) => typeof item === "string")
@@ -2293,6 +2508,7 @@ function normalizeMemory(memoryState) {
               lastSourceLabel: typeof item.lastSourceLabel === "string" ? item.lastSourceLabel : "",
               safeBets: normalizeMemoryOptions(item.safeBets),
               avoids: normalizeMemoryOptions(item.avoids),
+              rejectedOptions: normalizeMemoryTextList(item.rejectedOptions, 8),
             }))
             .slice(0, 12)
         : defaults.restaurants.entries,
@@ -2320,6 +2536,16 @@ function normalizeMemoryOptions(items) {
         .filter((item) => item && typeof item.title === "string" && typeof item.note === "string")
         .map((item) => ({ title: item.title, note: item.note }))
         .slice(0, 5)
+    : [];
+}
+
+function normalizeMemoryTextList(items, limit = 8) {
+  return Array.isArray(items)
+    ? items
+        .filter((item) => typeof item === "string")
+        .map((item) => item.trim())
+        .filter((item, index, collection) => item.length >= 2 && collection.indexOf(item) === index)
+        .slice(0, limit)
     : [];
 }
 
@@ -2483,6 +2709,7 @@ function mergeMemoryStates(baseMemoryState, nextMemoryState) {
       coachingTone: nextMemory.preferences.coachingTone || baseMemory.preferences.coachingTone,
       favoriteMeals: mergeFavoriteMeals(baseMemory.preferences.favoriteMeals, nextMemory.preferences.favoriteMeals),
       favoriteOrders: mergeFavoriteOrders(baseMemory.preferences.favoriteOrders, nextMemory.preferences.favoriteOrders),
+      favoriteDrinks: mergeFavoriteDrinks(baseMemory.preferences.favoriteDrinks, nextMemory.preferences.favoriteDrinks),
       dislikedFoods: Array.from(new Set([...baseMemory.preferences.dislikedFoods, ...nextMemory.preferences.dislikedFoods])).sort(),
     },
     restaurants: {
@@ -2553,6 +2780,34 @@ function mergeFavoriteOrders(baseItems, nextItems) {
     .slice(0, 12);
 }
 
+function mergeFavoriteDrinks(baseItems, nextItems) {
+  const merged = new Map();
+
+  [...baseItems, ...nextItems].forEach((item) => {
+    const existingItem = merged.get(item.id);
+    if (!existingItem) {
+      merged.set(item.id, { ...item });
+      return;
+    }
+
+    merged.set(item.id, {
+      ...existingItem,
+      name: item.name || existingItem.name,
+      count: Math.max(existingItem.count, item.count),
+      lastLoggedAt: pickLaterIsoTimestamp(existingItem.lastLoggedAt, item.lastLoggedAt),
+    });
+  });
+
+  return [...merged.values()]
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return new Date(right.lastLoggedAt).getTime() - new Date(left.lastLoggedAt).getTime();
+    })
+    .slice(0, 10);
+}
+
 function mergeRestaurantEntries(baseItems, nextItems) {
   const merged = new Map();
 
@@ -2578,6 +2833,7 @@ function mergeRestaurantEntries(baseItems, nextItems) {
       lastSourceLabel: latestItem.lastSourceLabel,
       safeBets: mergeMemoryOptions(existingItem.safeBets, item.safeBets),
       avoids: mergeMemoryOptions(existingItem.avoids, item.avoids),
+      rejectedOptions: normalizeMemoryTextList([...(existingItem.rejectedOptions || []), ...(item.rejectedOptions || [])], 8),
     });
   });
 
@@ -2624,6 +2880,10 @@ function getRestaurantMemoryFor(restaurantName) {
   return memory.restaurants.entries.find((entry) => entry.normalizedName === normalizedName) || null;
 }
 
+function getRestaurantRejectedOptions(restaurantName) {
+  return getRestaurantMemoryFor(restaurantName)?.rejectedOptions || [];
+}
+
 function rememberRestaurantAudit(audit) {
   const name = (audit.restaurantName || inferRestaurantNameFromUrl(audit.sourceUrl)).trim();
   const normalizedName = normalizeMemoryKey(name);
@@ -2642,6 +2902,7 @@ function rememberRestaurantAudit(audit) {
     lastSourceLabel: audit.sourceLabel || "",
     safeBets: mergeMemoryOptions(existingEntry?.safeBets || [], audit.goodOptions || []),
     avoids: mergeMemoryOptions(existingEntry?.avoids || [], audit.badOptions || []),
+    rejectedOptions: normalizeMemoryTextList(existingEntry?.rejectedOptions || [], 8),
   };
 
   memory.restaurants.entries = [
@@ -2666,25 +2927,33 @@ function rememberRestaurantAudit(audit) {
     ),
   ].slice(0, 8);
 
-  normalizeMemoryOptions(audit.goodOptions).forEach((item) => {
-    const key = `${normalizedName}::${normalizeMemoryKey(item.title)}`;
-    const existingFavorite = memory.preferences.favoriteOrders.find((entry) => entry.key === key);
-    if (existingFavorite) {
-      existingFavorite.count += 1;
-      existingFavorite.note = item.note;
-      existingFavorite.lastSeenAt = nextEntry.lastCheckedAt;
-      return;
-    }
+  saveMemory();
+}
 
+function rememberFavoriteOrder(restaurantName, item) {
+  const normalizedRestaurantName = normalizeMemoryKey(restaurantName);
+  const normalizedTitle = normalizeMemoryKey(item?.title);
+  if (!normalizedRestaurantName || !normalizedTitle) {
+    return;
+  }
+
+  const key = `${normalizedRestaurantName}::${normalizedTitle}`;
+  const existingFavorite = memory.preferences.favoriteOrders.find((entry) => entry.key === key);
+  const now = Date.now();
+  if (existingFavorite) {
+    existingFavorite.count += 1;
+    existingFavorite.note = item.note || existingFavorite.note;
+    existingFavorite.lastSeenAt = now;
+  } else {
     memory.preferences.favoriteOrders.push({
       key,
-      restaurantName: name,
+      restaurantName,
       title: item.title,
-      note: item.note,
+      note: item.note || "",
       count: 1,
-      lastSeenAt: nextEntry.lastCheckedAt,
+      lastSeenAt: now,
     });
-  });
+  }
 
   memory.preferences.favoriteOrders = memory.preferences.favoriteOrders
     .slice()
@@ -2696,6 +2965,15 @@ function rememberRestaurantAudit(audit) {
     })
     .slice(0, 12);
 
+  saveMemory();
+}
+
+function rememberRestaurantRejection(restaurantName, optionTitle) {
+  const restaurantEntry = getRestaurantMemoryFor(restaurantName);
+  if (!restaurantEntry) {
+    return;
+  }
+  restaurantEntry.rejectedOptions = normalizeMemoryTextList([...restaurantEntry.rejectedOptions, optionTitle], 8);
   saveMemory();
 }
 
@@ -2727,6 +3005,84 @@ function rememberMeal(meal, group) {
   saveMemory();
 }
 
+function rememberActualMeal(title, group) {
+  const normalizedTitle = title.trim();
+  if (!normalizedTitle) {
+    return false;
+  }
+
+  const normalizedGroup = group || "actual";
+  const id = `actual:${normalizeMemoryKey(normalizedGroup)}:${normalizeMemoryKey(normalizedTitle)}`;
+  const existingEntry = memory.preferences.favoriteMeals.find((entry) => entry.id === id);
+  if (existingEntry) {
+    existingEntry.count += 1;
+    existingEntry.lastLoggedAt = new Date().toISOString();
+  } else {
+    memory.preferences.favoriteMeals.push({
+      id,
+      name: normalizedTitle,
+      group: normalizedGroup,
+      count: 1,
+      lastLoggedAt: new Date().toISOString(),
+    });
+  }
+
+  memory.preferences.favoriteMeals = memory.preferences.favoriteMeals
+    .slice()
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return new Date(right.lastLoggedAt).getTime() - new Date(left.lastLoggedAt).getTime();
+    })
+    .slice(0, 12);
+
+  saveMemory();
+  return true;
+}
+
+function rememberFavoriteDrink(name, id = "") {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
+    return false;
+  }
+
+  const preferenceId = id || `drink:${normalizeMemoryKey(normalizedName)}`;
+  const existingEntry = memory.preferences.favoriteDrinks.find((entry) => entry.id === preferenceId);
+  if (existingEntry) {
+    existingEntry.count += 1;
+    existingEntry.lastLoggedAt = new Date().toISOString();
+  } else {
+    memory.preferences.favoriteDrinks.push({
+      id: preferenceId,
+      name: normalizedName,
+      count: 1,
+      lastLoggedAt: new Date().toISOString(),
+    });
+  }
+
+  memory.preferences.favoriteDrinks = memory.preferences.favoriteDrinks
+    .slice()
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return new Date(right.lastLoggedAt).getTime() - new Date(left.lastLoggedAt).getTime();
+    })
+    .slice(0, 10);
+
+  saveMemory();
+  return true;
+}
+
+function getActualMealPreferenceEntries() {
+  return memory.preferences.favoriteMeals.filter((entry) => entry.id.startsWith("actual:"));
+}
+
+function getFavoriteDrinkEntries() {
+  return memory.preferences.favoriteDrinks;
+}
+
 function mergeMemoryOptions(existingItems, nextItems) {
   const merged = [];
   const seen = new Set();
@@ -2743,22 +3099,174 @@ function mergeMemoryOptions(existingItems, nextItems) {
   return merged.slice(0, 5);
 }
 
-function applyRestaurantMemory(analysis, restaurantName) {
-  const remembered = getRestaurantMemoryFor(restaurantName);
-  if (!remembered) {
-    return analysis;
-  }
+function getFavoriteOrderCount(restaurantName, title) {
+  const key = `${normalizeMemoryKey(restaurantName)}::${normalizeMemoryKey(title)}`;
+  return memory.preferences.favoriteOrders.find((entry) => entry.key === key)?.count || 0;
+}
 
-  const noteBits = [`Memory: ${remembered.count} prior ${remembered.count === 1 ? "audit" : "audits"} for ${remembered.name}.`];
-  if (remembered.safeBets.length) {
-    noteBits.push(`Previous workable picks: ${remembered.safeBets.slice(0, 3).map((item) => item.title).join(", ")}.`);
-  }
+function applyRestaurantOptionPreferences(analysis, restaurantName) {
+  const rememberedRejectedOptions = getRestaurantRejectedOptions(restaurantName);
+  const rejectedOptions = normalizeMemoryTextList([...(analysis.rejectedOptions || []), ...rememberedRejectedOptions], 8);
+  const rejectedKeys = new Set(rejectedOptions.map((item) => normalizeMemoryKey(item)));
+  const candidateOptions = normalizeMemoryOptions(analysis.candidateOptions.length ? analysis.candidateOptions : analysis.goodOptions)
+    .slice()
+    .sort((left, right) => {
+      const leftCount = getFavoriteOrderCount(restaurantName, left.title);
+      const rightCount = getFavoriteOrderCount(restaurantName, right.title);
+      if (rightCount !== leftCount) {
+        return rightCount - leftCount;
+      }
+      return 0;
+    });
 
+  const usableOptions = candidateOptions.filter((item) => !rejectedKeys.has(normalizeMemoryKey(item.title)));
   return {
     ...analysis,
-    notes: `${analysis.notes} ${noteBits.join(" ")}`.trim(),
-    goodOptions: analysis.goodOptions.length ? analysis.goodOptions : remembered.safeBets,
+    candidateOptions,
+    rejectedOptions,
+    goodOptions: usableOptions.slice(0, 3),
+    alternateOptions: usableOptions.slice(3, 6),
   };
+}
+
+function applyRestaurantMemory(analysis, restaurantName) {
+  const remembered = getRestaurantMemoryFor(restaurantName);
+  const noteBits = [];
+
+  if (remembered) {
+    noteBits.push(`Memory: ${remembered.count} prior ${remembered.count === 1 ? "audit" : "audits"} for ${remembered.name}.`);
+    if (remembered.safeBets.length) {
+      noteBits.push(`Previous workable picks: ${remembered.safeBets.slice(0, 3).map((item) => item.title).join(", ")}.`);
+    }
+    if (remembered.rejectedOptions.length) {
+      noteBits.push(`Previously rejected here: ${remembered.rejectedOptions.join(", ")}.`);
+    }
+  }
+
+  return applyRestaurantOptionPreferences(
+    {
+      ...analysis,
+      notes: `${analysis.notes} ${noteBits.join(" ")}`.trim(),
+      candidateOptions: mergeMemoryOptions(analysis.candidateOptions, remembered?.safeBets || []),
+      rejectedOptions: remembered?.rejectedOptions || [],
+    },
+    restaurantName,
+  );
+}
+
+function handleSaveActualMeal() {
+  const input = document.getElementById("actual-meal-input");
+  const group = document.getElementById("actual-meal-context").value;
+  if (!rememberActualMeal(input.value, group)) {
+    showToast("Type the actual meal first.");
+    return;
+  }
+
+  const savedValue = input.value.trim();
+  input.value = "";
+  renderMeals();
+  renderMemory();
+  showToast(`${savedValue} saved to meal memory.`);
+}
+
+function handleSaveActualDrink() {
+  const input = document.getElementById("actual-drink-input");
+  if (!rememberFavoriteDrink(input.value)) {
+    showToast("Type the actual drink first.");
+    return;
+  }
+
+  const savedValue = input.value.trim();
+  input.value = "";
+  renderDrinkButtons();
+  renderAlcohol();
+  renderMemory();
+  showToast(`${savedValue} saved to drink memory.`);
+}
+
+function handleRestaurantOptionAction(event) {
+  const button = event.target.closest("[data-restaurant-option-action]");
+  if (!button) {
+    return;
+  }
+
+  const listName = button.dataset.restaurantOptionList;
+  const index = Number.parseInt(button.dataset.restaurantOptionIndex || "-1", 10);
+  const list = listName === "alternate" ? state.restaurantAudit.alternateOptions : state.restaurantAudit.goodOptions;
+  const option = list[index];
+  if (!option) {
+    return;
+  }
+
+  if (button.dataset.restaurantOptionAction === "ate") {
+    rememberActualMeal(option.title, "restaurant");
+    rememberFavoriteOrder(state.restaurantAudit.restaurantName || "Restaurant", option);
+    state.restaurantAudit = applyRestaurantOptionPreferences(state.restaurantAudit, state.restaurantAudit.restaurantName || "Restaurant");
+    saveState();
+    renderMeals();
+    renderMemory();
+    renderRestaurantAudit();
+    showToast(`${option.title} saved as an actual order.`);
+    return;
+  }
+
+  state.restaurantAudit.rejectedOptions = normalizeMemoryTextList([...state.restaurantAudit.rejectedOptions, option.title], 8);
+  state.restaurantAudit = applyRestaurantOptionPreferences(state.restaurantAudit, state.restaurantAudit.restaurantName || "Restaurant");
+  saveState();
+  rememberRestaurantRejection(state.restaurantAudit.restaurantName || "Restaurant", option.title);
+  renderRestaurantAudit();
+  renderMemory();
+  showToast("Fine. Rotating in the next best options.");
+}
+
+function setStepsValue(nextValue, source) {
+  state.steps = nextValue;
+  state.stepsSource = source;
+  state.stepsUpdatedAt = Date.now();
+  saveState();
+}
+
+function maybeImportStepsFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const rawSteps = params.get("steps");
+  if (!rawSteps) {
+    return "";
+  }
+
+  const nextValue = Number.parseInt(rawSteps, 10);
+  if (!Number.isFinite(nextValue) || nextValue < 0) {
+    params.delete("steps");
+    params.delete("stepsSource");
+    params.delete("source");
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${window.location.hash}`;
+    window.history.replaceState({}, "", nextUrl);
+    return "";
+  }
+
+  const source = params.get("stepsSource") || params.get("source") || "apple-health-shortcut";
+  setStepsValue(nextValue, source);
+  params.delete("steps");
+  params.delete("stepsSource");
+  params.delete("source");
+  const nextSearch = params.toString();
+  const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${window.location.hash}`;
+  window.history.replaceState({}, "", nextUrl);
+  return `Imported ${nextValue.toLocaleString()} steps from ${formatStepsSourceLabel(source)}.`;
+}
+
+function formatStepsSourceLabel(source) {
+  if (source === "apple-health-shortcut") {
+    return "Apple Shortcut import";
+  }
+  if (source === "manual") {
+    return "Manual update";
+  }
+  return source
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(" ");
 }
 
 function formatMemoryTimestamp(value) {
@@ -2849,6 +3357,7 @@ function logDrink(drinkId) {
     units: drink.units,
     loggedAt: new Date().toISOString(),
   });
+  rememberFavoriteDrink(drink.name, drink.id);
   saveState();
   refreshAll();
   showToast(`${drink.name} logged.`);
@@ -3061,6 +3570,8 @@ function buildDefaultState(date) {
     waterLiters: 0,
     movementMinutes: 0,
     steps: 0,
+    stepsSource: "manual",
+    stepsUpdatedAt: null,
     mindsetIndex: Math.floor(Math.random() * MINDSET_MESSAGES.length),
     moveSeed: getStoredMoveSeed(),
     quickMoveIndex: Math.floor(Math.random() * QUICK_MOVES.length),
@@ -3097,6 +3608,8 @@ function normalizeState(existingState, date) {
     waterLiters: Number.isFinite(existingState.waterLiters) ? existingState.waterLiters : 0,
     movementMinutes: Number.isFinite(existingState.movementMinutes) ? existingState.movementMinutes : 0,
     steps: Number.isFinite(existingState.steps) ? existingState.steps : 0,
+    stepsSource: typeof existingState.stepsSource === "string" ? existingState.stepsSource : defaults.stepsSource,
+    stepsUpdatedAt: Number.isFinite(existingState.stepsUpdatedAt) ? existingState.stepsUpdatedAt : defaults.stepsUpdatedAt,
     mindsetIndex: Number.isInteger(existingState.mindsetIndex) ? existingState.mindsetIndex : defaults.mindsetIndex,
     moveSeed: Number.isInteger(existingState.moveSeed) ? existingState.moveSeed : defaults.moveSeed,
     quickMoveIndex: Number.isInteger(existingState.quickMoveIndex)
@@ -3146,6 +3659,9 @@ function buildDefaultRestaurantAudit() {
     verdictTone: "idle",
     verdict: "",
     notes: "",
+    candidateOptions: [],
+    alternateOptions: [],
+    rejectedOptions: [],
     goodOptions: [],
     badOptions: [],
     checkedAt: null,
@@ -3169,6 +3685,17 @@ function normalizeRestaurantAudit(audit) {
     verdictTone: typeof audit?.verdictTone === "string" ? audit.verdictTone : defaults.verdictTone,
     verdict: typeof audit?.verdict === "string" ? audit.verdict : defaults.verdict,
     notes: typeof audit?.notes === "string" ? audit.notes : defaults.notes,
+    candidateOptions: Array.isArray(audit?.candidateOptions)
+      ? audit.candidateOptions
+          .filter((item) => item && typeof item.title === "string" && typeof item.note === "string")
+          .slice(0, 10)
+      : defaults.candidateOptions,
+    alternateOptions: Array.isArray(audit?.alternateOptions)
+      ? audit.alternateOptions
+          .filter((item) => item && typeof item.title === "string" && typeof item.note === "string")
+          .slice(0, 5)
+      : defaults.alternateOptions,
+    rejectedOptions: normalizeMemoryTextList(audit?.rejectedOptions, 8),
     goodOptions: Array.isArray(audit?.goodOptions)
       ? audit.goodOptions
           .filter((item) => item && typeof item.title === "string" && typeof item.note === "string")

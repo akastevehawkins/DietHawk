@@ -13,12 +13,15 @@ Mobile-first static GitHub Pages app for Steve Hawkins' daily keto, fasting, mov
 - Dedicated movement timer with quick anywhere exercise prompts and one-tap minute counting
 - Cholesterol-aware meal guidance layered on top of keto so low-carb junk does not get a free pass
 - Restaurant audit that can use a restaurant name, direct menu URL, or pasted menu text to flag keto-friendly and cholesterol-aware options against the current eating window
+- Restaurant feedback loop with `I ate this` and `Not for me`, so actual orders are remembered and alternates rotate in when a suggestion misses
 - Menu screenshot OCR: take or upload a photo, run browser-side OCR, and feed the extracted text into the restaurant audit automatically
-- IndexedDB-backed memory that persists repeated restaurant audits, meal logs, favorite safe orders, and disliked foods across days
+- IndexedDB-backed memory that persists repeated restaurant audits, actual restaurant orders, learned meal patterns, drink tendencies, and disliked foods across days
 - Memory export and clear actions from the UI
 - Keto meal choices for breakfast, lunch, dinner, and snacks with one-tap logging
 - Alcohol logging with calories, carbs, standard drinks, and warning states
+- Separate learning inputs for what Steve actually ate or drank when the preset suggestions were not the real choice
 - Water, movement, and step tracking stored in `localStorage`
+- Step import support through URL parameters such as `?steps=4321&stepsSource=apple-health-shortcut`, which is useful for Apple Shortcuts bridges
 - PWA metadata, iPhone install guidance, and offline cache for home-screen use
 
 ## GitHub Pages deploy
@@ -34,6 +37,7 @@ Mobile-first static GitHub Pages app for Steve Hawkins' daily keto, fasting, mov
 - The extra HTML routes load the shared app shell from `index.html`, so the app keeps one behavior model without duplicating logic across pages.
 - Task alerts and the modal reminder system work while the app is open.
 - Browser notifications depend on platform support and permission.
+- Apple Health step data cannot be read directly from a static GitHub Pages web app. The supported fallback here is manual entry or opening the app from an Apple Shortcut that passes a `steps` value in the URL.
 - Fully reliable background notifications on iPhone would require a push-capable backend or a native wrapper; GitHub Pages alone cannot do that.
 - Because Steve uses lisinopril-HCTZ and also needs to keep high cholesterol in check, the copy keeps hydration, dizziness, alcohol caution, and cleaner-fat meal guidance visible.
 
