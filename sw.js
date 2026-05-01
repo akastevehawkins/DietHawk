@@ -1,4 +1,4 @@
-const CACHE_NAME = "diethawk-v6";
+const CACHE_NAME = "diethawk-v7";
 const APP_FILES = [
   "./",
   "./index.html",
