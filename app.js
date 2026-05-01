@@ -538,6 +538,16 @@ function tick() {
   maybeAlertForMovementTimer();
 }
 
+function bindIfPresent(elementId, eventName, handler) {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    return null;
+  }
+
+  element.addEventListener(eventName, handler);
+  return element;
+}
+
 function bindEvents() {
   window.addEventListener("hashchange", () => {
     renderPageNavigation();
@@ -615,11 +625,11 @@ function bindEvents() {
     clearMemory();
   });
 
-  document.getElementById("save-actual-meal").addEventListener("click", () => {
+  bindIfPresent("save-actual-meal", "click", () => {
     handleSaveActualMeal();
   });
 
-  document.getElementById("actual-meal-input").addEventListener("keydown", (event) => {
+  bindIfPresent("actual-meal-input", "keydown", (event) => {
     if (event.key !== "Enter") {
       return;
     }
@@ -627,11 +637,11 @@ function bindEvents() {
     handleSaveActualMeal();
   });
 
-  document.getElementById("save-actual-drink").addEventListener("click", () => {
+  bindIfPresent("save-actual-drink", "click", () => {
     handleSaveActualDrink();
   });
 
-  document.getElementById("actual-drink-input").addEventListener("keydown", (event) => {
+  bindIfPresent("actual-drink-input", "keydown", (event) => {
     if (event.key !== "Enter") {
       return;
     }
@@ -699,7 +709,7 @@ function bindEvents() {
   });
 
   ["restaurant-good-options", "restaurant-alternate-options"].forEach((elementId) => {
-    document.getElementById(elementId).addEventListener("click", (event) => {
+    bindIfPresent(elementId, "click", (event) => {
       handleRestaurantOptionAction(event);
     });
   });
@@ -880,6 +890,7 @@ function refreshAll() {
   renderMovementTimer();
   renderRestaurantAudit();
   renderMemory();
+  renderCommandBrief();
   renderWarnings();
   renderTotals();
   renderGoals();
@@ -1121,21 +1132,7 @@ function renderPhase() {
   document.getElementById("phase-instruction").textContent = phase.instruction;
 }
 
-function renderLocalClock() {
-  const now = new Date();
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local browser time";
-  const localTime = now.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZoneName: "short",
-  });
-
-  document.getElementById("local-time-display").textContent = `Local time: ${localTime}`;
-  document.getElementById("time-zone-display").textContent = `Timezone: ${timezone}`;
-}
-
-function renderWarnings() {
+function getWarnings() {
   const totals = getTotals();
   const heartPlan = getHeartPlanStatus();
   const warnings = [];
@@ -1179,6 +1176,112 @@ function renderWarnings() {
   if (warnings.length === 0) {
     warnings.push("Nothing urgent is broken. Stay sharp and keep stacking clean reps.");
   }
+
+  return warnings;
+}
+
+function getNextOpenTask() {
+  return [...state.tasks]
+    .filter((task) => !task.completed)
+    .sort((left, right) => left.nextDue - right.nextDue)[0] || null;
+}
+
+function getNutritionBrief() {
+  const totals = getTotals();
+  const heartPlan = getHeartPlanStatus();
+  const phase = getCurrentPhase(new Date());
+  const proteinGap = Math.max(0, PROFILE.proteinGoal - totals.protein);
+
+  if (phase.name === "FASTING") {
+    return {
+      headline: "Hold the fast clean.",
+      note: "No calories before the window opens. First meal still starts with protein, not a reward binge.",
+    };
+  }
+
+  if (totals.carbs > PROFILE.carbGoal) {
+    return {
+      headline: "Zero extra carbs from here.",
+      note: "The cap is already blown. Finish with protein, water, and the cleanest vegetables available.",
+    };
+  }
+
+  if (proteinGap >= 50) {
+    return {
+      headline: `Close a ${proteinGap} g protein gap.`,
+      note: "Dinner has to pull real weight. Lean protein first, then vegetables and cleaner fats.",
+    };
+  }
+
+  if (heartPlan.mealsSupporting < PROFILE.heartSmartMealGoal) {
+    return {
+      headline: "Get one cleaner-fat meal in.",
+      note: "Fish, lean protein, olive oil, avocado, nuts, and non-starchy vegetables still matter.",
+    };
+  }
+
+  return {
+    headline: "Finish tight and boring.",
+    note: "You do not need novelty. You need a clean close to the eating window and a clean start to the fast.",
+  };
+}
+
+function renderCommandBrief() {
+  const phaseLine = document.getElementById("brief-phase-line");
+  const phaseNote = document.getElementById("brief-phase-note");
+  const taskLine = document.getElementById("brief-task-line");
+  const taskNote = document.getElementById("brief-task-note");
+  const riskLine = document.getElementById("brief-risk-line");
+  const riskNote = document.getElementById("brief-risk-note");
+  const nutritionLine = document.getElementById("brief-nutrition-line");
+  const nutritionNote = document.getElementById("brief-nutrition-note");
+  if (!phaseLine || !phaseNote || !taskLine || !taskNote || !riskLine || !riskNote || !nutritionLine || !nutritionNote) {
+    return;
+  }
+
+  const phase = getCurrentPhase(new Date());
+  const warnings = getWarnings();
+  const nextTask = getNextOpenTask();
+  const nutritionBrief = getNutritionBrief();
+  const now = Date.now();
+
+  phaseLine.textContent = `${phase.name} until ${phase.nextLabel}`;
+  phaseNote.textContent = phase.instruction;
+
+  if (!nextTask) {
+    taskLine.textContent = "All scheduled tasks cleared.";
+    taskNote.textContent = "The clock is not chasing you right now. Keep the standard anyway.";
+  } else if (nextTask.nextDue <= now) {
+    taskLine.textContent = `Due now: ${nextTask.title}`;
+    taskNote.textContent = nextTask.instruction;
+  } else {
+    taskLine.textContent = `${formatClock(new Date(nextTask.nextDue))}: ${nextTask.title}`;
+    taskNote.textContent = nextTask.instruction;
+  }
+
+  riskLine.textContent = warnings[0];
+  riskNote.textContent = warnings[1] || "No secondary leak is beating the main one right now.";
+
+  nutritionLine.textContent = nutritionBrief.headline;
+  nutritionNote.textContent = nutritionBrief.note;
+}
+
+function renderLocalClock() {
+  const now = new Date();
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local browser time";
+  const localTime = now.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZoneName: "short",
+  });
+
+  document.getElementById("local-time-display").textContent = `Local time: ${localTime}`;
+  document.getElementById("time-zone-display").textContent = `Timezone: ${timezone}`;
+}
+
+function renderWarnings() {
+  const warnings = getWarnings();
 
   document.getElementById("warning-message").textContent = warnings[0];
   document.getElementById("warning-chips").innerHTML = warnings
@@ -1527,6 +1630,65 @@ function renderRestaurantOptionList(elementId, items, emptyMessage, tone, option
     .join("");
 }
 
+function renderRestaurantMemoryBrief() {
+  const root = document.getElementById("restaurant-memory-brief");
+  if (!root) {
+    return;
+  }
+
+  const currentRestaurantName = (state.restaurantAudit.restaurantName || "").trim();
+  const currentRestaurantMemory = getRestaurantMemoryFor(currentRestaurantName);
+
+  if (currentRestaurantMemory) {
+    const rememberedSafeBets = currentRestaurantMemory.safeBets.length
+      ? currentRestaurantMemory.safeBets.slice(0, 3).map((item) => item.title).join(", ")
+      : "No saved best bets yet";
+    const rejectedItems = currentRestaurantMemory.rejectedOptions.length
+      ? currentRestaurantMemory.rejectedOptions.slice(0, 3).join(", ")
+      : "Nothing explicitly rejected yet";
+    root.innerHTML = `Saved from <strong>${currentRestaurantMemory.count} ${currentRestaurantMemory.count === 1 ? "audit" : "audits"}</strong>. Best bets to repeat: ${escapeHtml(rememberedSafeBets)}. Prior rejections: ${escapeHtml(rejectedItems)}.`;
+    return;
+  }
+
+  if (currentRestaurantName) {
+    root.textContent = `No saved memory for ${currentRestaurantName} yet. Run one clean audit and this section will remember the least-stupid picks plus prior rejections.`;
+    return;
+  }
+
+  root.textContent = "Type a restaurant name and the saved safe bets plus prior rejections will show here.";
+}
+
+function renderMemoryRecentAuditsList() {
+  const root = document.getElementById("memory-recent-audits");
+  if (!root) {
+    return;
+  }
+
+  if (!memory.restaurants.recentAudits.length) {
+    root.innerHTML = '<div class="restaurant-empty">No audit trail yet. Run a few restaurant checks and the latest reads will stack here.</div>';
+    return;
+  }
+
+  root.innerHTML = memory.restaurants.recentAudits
+    .slice(0, 3)
+    .map((entry) => {
+      const tone = entry.verdictTone === "avoid" ? "bad" : "good";
+      const summary = entry.safeBets.length
+        ? `Last workable picks: ${entry.safeBets.map((item) => item.title).join(", ")}`
+        : entry.avoids.length
+          ? `Last red flags: ${entry.avoids.map((item) => item.title).join(", ")}`
+          : "Audit saved with no strong callouts yet.";
+      return `
+        <article class="restaurant-option ${tone}">
+          <h4>${escapeHtml(entry.name)}</h4>
+          <p>${escapeHtml(summary)}</p>
+          <p class="memory-meta">${escapeHtml(formatMemoryTimestamp(entry.checkedAt))} • ${escapeHtml(entry.sourceLabel || "Saved from audit")}</p>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function renderMemory() {
   const restaurantCount = memory.restaurants.entries.length;
   const auditCount = memory.restaurants.recentAudits.length;
@@ -1536,34 +1698,39 @@ function renderMemory() {
   const dislikedFoodCount = memory.preferences.dislikedFoods.length;
   const currentRestaurantName = (state.restaurantAudit.restaurantName || "").trim();
   const currentRestaurantMemory = getRestaurantMemoryFor(currentRestaurantName);
+  const latestAudit = memory.restaurants.recentAudits[0] || null;
+  const dossierRestaurantName = currentRestaurantName || latestAudit?.name || "";
+  const dossierRestaurantMemory = currentRestaurantMemory || getRestaurantMemoryFor(dossierRestaurantName);
 
   document.getElementById("memory-overview").textContent = restaurantCount || mealCount || orderCount || drinkCount || dislikedFoodCount
-    ? "DietHawk now remembers repeated restaurants, actual chosen orders, disliked foods, meal patterns, and drink tendencies across days. That means less fake guessing and more steering toward what you really do."
-    : "This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.";
+    ? "This is the private playbook. Use the repeated orders, restaurant wins, drink patterns, and avoid flags instead of pretending every day starts from zero."
+    : "Nothing learned yet. Run audits, log actual orders, and this page turns into a private playbook instead of a blank slate.";
   document.getElementById("memory-stats-restaurants").textContent = `${restaurantCount} ${restaurantCount === 1 ? "favorite restaurant" : "favorite restaurants"}`;
   document.getElementById("memory-stats-audits").textContent = `${auditCount} recent ${auditCount === 1 ? "audit" : "audits"}`;
   document.getElementById("memory-stats-meals").textContent = `${mealCount} recurring ${mealCount === 1 ? "meal" : "meals"}`;
   document.getElementById("memory-stats-orders").textContent = `${orderCount} repeated ${orderCount === 1 ? "actual order" : "actual orders"}`;
   document.getElementById("memory-stats-drinks").textContent = `${drinkCount} recurring ${drinkCount === 1 ? "drink" : "drinks"}`;
   document.getElementById("memory-stats-dislikes").textContent = `${dislikedFoodCount} disliked ${dislikedFoodCount === 1 ? "food" : "foods"}`;
+  renderRestaurantMemoryBrief();
 
   const callout = document.getElementById("restaurant-memory-callout");
-  if (currentRestaurantMemory) {
-    const rememberedSafeBets = currentRestaurantMemory.safeBets.length
-      ? currentRestaurantMemory.safeBets.slice(0, 3).map((item) => item.title).join(", ")
+  if (dossierRestaurantMemory) {
+    const rememberedSafeBets = dossierRestaurantMemory.safeBets.length
+      ? dossierRestaurantMemory.safeBets.slice(0, 3).map((item) => item.title).join(", ")
       : "No saved best bets yet";
     callout.innerHTML = `
-      <strong>${escapeHtml(currentRestaurantMemory.name)}</strong> has been audited ${currentRestaurantMemory.count} ${currentRestaurantMemory.count === 1 ? "time" : "times"}.<br />
-      Last check: ${escapeHtml(formatMemoryTimestamp(currentRestaurantMemory.lastCheckedAt))}.<br />
-      Remembered workable picks: ${escapeHtml(rememberedSafeBets)}.<br />
-      Rejected here before: ${escapeHtml(currentRestaurantMemory.rejectedOptions.length ? currentRestaurantMemory.rejectedOptions.join(", ") : "Nothing explicitly rejected yet")}.
+      <strong>${escapeHtml(dossierRestaurantMemory.name)}</strong> has been audited ${dossierRestaurantMemory.count} ${dossierRestaurantMemory.count === 1 ? "time" : "times"}.<br />
+      Last check: ${escapeHtml(formatMemoryTimestamp(dossierRestaurantMemory.lastCheckedAt))}.<br />
+      Repeatable picks: ${escapeHtml(rememberedSafeBets)}.<br />
+      Rejected here before: ${escapeHtml(dossierRestaurantMemory.rejectedOptions.length ? dossierRestaurantMemory.rejectedOptions.join(", ") : "Nothing explicitly rejected yet")}.
     `;
-  } else if (currentRestaurantName) {
-    callout.textContent = `No saved memory for ${currentRestaurantName} yet. Audit it once and this panel will remember the least-stupid picks.`;
+  } else if (dossierRestaurantName) {
+    callout.textContent = `No saved memory for ${dossierRestaurantName} yet. Audit it once and this dossier will remember the least-stupid picks plus prior rejections.`;
   } else {
-    callout.textContent = "Type a restaurant name or run an audit and the memory layer will start stacking repeated safe bets here.";
+    callout.textContent = "Type a restaurant name or run an audit and this dossier will start stacking repeated safe bets here.";
   }
 
+  renderMemoryRecentAuditsList();
   renderMemoryRestaurantList();
   renderFavoriteOrdersList();
   renderMemoryMealList();

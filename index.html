@@ -32,12 +32,12 @@
       <nav class="page-menu panel" aria-label="DietHawk sections">
         <div class="page-menu-top">
           <div>
-            <p class="eyebrow">Command Menu</p>
+            <p class="eyebrow">Private Protocol</p>
             <h2 id="current-page-label">Today</h2>
           </div>
           <div class="page-menu-side">
             <span class="warning-chip memory-sync-chip idle" id="memory-sync-status">Memory ready</span>
-            <p class="support-text page-menu-copy">Use the menu. Stop scrolling through the whole app like it is a ransom note.</p>
+            <p class="support-text page-menu-copy">Open the page you need. Execute the protocol. Move on.</p>
           </div>
         </div>
         <div class="page-links" role="tablist" aria-label="DietHawk pages">
@@ -49,14 +49,51 @@
         </div>
       </nav>
 
+      <section class="brief-band panel" data-page-section="today" aria-label="Today's operating brief">
+        <div class="panel-head compact brief-head">
+          <div>
+            <p class="eyebrow">Operating Brief</p>
+            <h2>What matters right now</h2>
+          </div>
+          <p class="support-text brief-intro">Same feature set. Sharper command. This is the distilled readout.</p>
+        </div>
+        <div class="brief-grid">
+          <article class="brief-card brief-card-primary">
+            <span class="brief-kicker">Phase</span>
+            <strong class="brief-value" id="brief-phase-line">Loading phase...</strong>
+            <p class="brief-note" id="brief-phase-note"></p>
+          </article>
+          <article class="brief-card">
+            <span class="brief-kicker">Next move</span>
+            <strong class="brief-value" id="brief-task-line">Loading next task...</strong>
+            <p class="brief-note" id="brief-task-note"></p>
+          </article>
+          <article class="brief-card">
+            <span class="brief-kicker">Primary risk</span>
+            <strong class="brief-value" id="brief-risk-line">Loading risk...</strong>
+            <p class="brief-note" id="brief-risk-note"></p>
+          </article>
+          <article class="brief-card">
+            <span class="brief-kicker">Nutrition call</span>
+            <strong class="brief-value" id="brief-nutrition-line">Loading nutrition call...</strong>
+            <p class="brief-note" id="brief-nutrition-note"></p>
+          </article>
+        </div>
+      </section>
+
       <header class="hero panel" data-page-section="today">
         <div class="hero-copy">
-          <p class="eyebrow">Daily Keto Command</p>
-          <h1>No bargaining. Follow the plan.</h1>
+          <p class="eyebrow">Hardline Operating System</p>
+          <h1>Hold the line.</h1>
           <p class="hero-lead">
-            This is Steve Hawkins' daily operating system: fasting clock, keto meal calls,
-            alcohol accountability, movement blocks, cholesterol-aware meal filters, and blunt reminders that keep the day on rails.
+            DietHawk is Steve Hawkins' private hardline system for fasting discipline, cholesterol-aware keto calls,
+            restaurant triage, alcohol control, movement enforcement, and pattern memory. Same mission every day: no drift.
           </p>
+          <div class="hero-signature" aria-label="DietHawk operating signature">
+            <span class="signature-chip">Hardline mode</span>
+            <span class="signature-chip">Cholesterol-aware keto</span>
+            <span class="signature-chip">Restaurant triage</span>
+          </div>
           <div class="hero-actions">
             <button class="primary-button" id="enable-notifications" type="button">Enable Alerts</button>
             <button class="secondary-button" id="refresh-mindset" type="button">New Reality Check</button>
@@ -84,12 +121,12 @@
           </section>
 
           <section class="mindset-card">
-            <p class="eyebrow">Today's Message</p>
+            <p class="eyebrow">Command Voice</p>
             <p id="mindset-message" class="mindset-message"></p>
           </section>
 
           <section class="install-card" id="install-card">
-            <p class="eyebrow">iPhone Install</p>
+            <p class="eyebrow">Field Access</p>
             <p id="install-message" class="install-message">
               Open this in Safari, tap Share, then Add to Home Screen. That gives the cleanest full-screen iPhone layout.
             </p>
@@ -102,7 +139,7 @@
         <article class="panel phase-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Live Phase</p>
+              <p class="eyebrow">Current Phase</p>
               <h2>Eat when allowed. Fast when told.</h2>
             </div>
             <span class="phase-badge" id="phase-badge">FASTING</span>
@@ -136,8 +173,8 @@
         <article class="panel warning-panel">
           <div class="panel-head compact">
             <div>
-              <p class="eyebrow">Live Warning</p>
-              <h2>What needs correcting now</h2>
+              <p class="eyebrow">Immediate Correction</p>
+              <h2>Fix this before it spreads</h2>
             </div>
           </div>
           <p id="warning-message" class="warning-message"></p>
@@ -147,8 +184,8 @@
         <article class="panel tracker-panel">
           <div class="panel-head compact">
             <div>
-              <p class="eyebrow">Daily Scoreboard</p>
-              <h2>Track what counts</h2>
+              <p class="eyebrow">Control Board</p>
+              <h2>Track the numbers that matter</h2>
             </div>
             <button class="ghost-button" id="reset-day" type="button">Reset Day</button>
           </div>
@@ -193,7 +230,7 @@
         <article class="panel goals-panel">
           <div class="panel-head compact">
             <div>
-              <p class="eyebrow">Daily Goals</p>
+              <p class="eyebrow">Standards</p>
               <h2>Hit the non-negotiables</h2>
             </div>
           </div>
@@ -251,7 +288,7 @@
         <div class="panel-head compact">
           <div>
             <p class="eyebrow">Task Queue</p>
-            <h2>Do this when the clock says so</h2>
+            <h2>Do it when the clock says so</h2>
           </div>
         </div>
         <div class="task-subhead">
@@ -403,131 +440,232 @@
       </section>
 
       <section class="panel restaurant-panel" data-page-section="restaurant">
-        <div class="panel-head compact">
-          <div>
-            <p class="eyebrow">Restaurant Audit</p>
-            <h2>What can I eat here</h2>
+        <div class="restaurant-command-surface">
+          <div class="restaurant-story">
+            <div class="panel-head compact restaurant-head">
+              <div>
+                <p class="eyebrow">Restaurant Audit</p>
+                <h2>Order without freelancing</h2>
+              </div>
+              <span class="timer-pill ready" id="restaurant-phase-badge">CHECK MENU</span>
+            </div>
+            <div class="warning-chips restaurant-status-chips">
+              <span class="warning-chip" id="restaurant-context-chip">Schedule context</span>
+              <span class="warning-chip" id="restaurant-source-chip">No menu loaded yet</span>
+            </div>
+            <div class="restaurant-results restaurant-decision-stack">
+              <p class="restaurant-verdict idle" id="restaurant-verdict">
+                No restaurant checked yet. Give me a name, a URL, or pasted menu text.
+              </p>
+              <p class="support-text restaurant-notes" id="restaurant-notes">
+                Restaurant name alone is enough for a best-effort lookup. A direct menu URL is faster, and pasted menu text is the fallback when the website is a mess.
+              </p>
+            </div>
+            <div class="restaurant-support-grid">
+              <article class="restaurant-brief-card">
+                <p class="eyebrow">Remembered here</p>
+                <h3>What this place already taught you</h3>
+                <p class="support-text restaurant-memory-brief" id="restaurant-memory-brief">
+                  Type a restaurant name and the saved safe bets plus prior rejections will show here.
+                </p>
+              </article>
+              <article class="restaurant-brief-card restaurant-brief-card-tool">
+                <p class="eyebrow">Capture status</p>
+                <h3>Bring me a readable menu</h3>
+                <div class="warning-chips restaurant-photo-chips">
+                  <span class="warning-chip" id="restaurant-photo-chip">No screenshot selected</span>
+                  <span class="warning-chip" id="restaurant-ocr-chip">OCR idle</span>
+                </div>
+                <p class="support-text restaurant-brief-note">
+                  Name only works. Direct menu URL is cleaner. Paste text when the site is junk.
+                </p>
+              </article>
+            </div>
           </div>
-          <span class="timer-pill ready" id="restaurant-phase-badge">CHECK MENU</span>
+
+          <aside class="restaurant-tool-panel">
+            <p class="eyebrow">Audit inputs</p>
+            <h3>Run the menu through the grinder</h3>
+            <p class="support-text restaurant-intro">
+              Type only the restaurant name and hit Audit Menu. Or take a menu screenshot right here. The app will read the photo in-browser, drop the text into the audit, and tell you what is actually safe to order.
+            </p>
+            <div class="restaurant-form">
+              <label class="restaurant-field">
+                <span>Restaurant name</span>
+                <input id="restaurant-name" type="text" placeholder="Chipotle, Texas Roadhouse, Chick-fil-A" autocomplete="off" />
+              </label>
+              <label class="restaurant-field">
+                <span>Menu URL (optional)</span>
+                <input id="restaurant-url" type="url" placeholder="Optional: https://restaurant.com/menu" autocomplete="off" />
+              </label>
+              <label class="restaurant-field restaurant-field-wide restaurant-photo-field">
+                <span>Menu screenshot or photo</span>
+                <input id="restaurant-photo-input" type="file" accept="image/*" capture="environment" />
+                <small class="restaurant-field-note">
+                  Take the shot. OCR runs in the browser and the audit starts automatically.
+                </small>
+              </label>
+              <label class="restaurant-field restaurant-field-wide">
+                <span>Paste menu text if the site is annoying</span>
+                <textarea
+                  id="restaurant-menu-text"
+                  rows="6"
+                  placeholder="OCR text lands here automatically. You can also paste menu text here if the site is a pain."
+                ></textarea>
+              </label>
+            </div>
+            <div class="restaurant-actions">
+              <button class="primary-button" id="analyze-restaurant" type="button">Audit Menu</button>
+              <button class="ghost-button" id="clear-restaurant" type="button">Clear</button>
+            </div>
+          </aside>
         </div>
-        <p class="support-text restaurant-intro">
-          Type only the restaurant name and hit Audit Menu. Or take a menu screenshot right here. The app will read the photo in-browser, drop the text into the audit, and tell you what is actually safe to order.
-        </p>
-        <div class="restaurant-form">
-          <label class="restaurant-field">
-            <span>Restaurant name</span>
-            <input id="restaurant-name" type="text" placeholder="Chipotle, Texas Roadhouse, Chick-fil-A" autocomplete="off" />
-          </label>
-          <label class="restaurant-field">
-            <span>Menu URL (optional)</span>
-            <input id="restaurant-url" type="url" placeholder="Optional: https://restaurant.com/menu" autocomplete="off" />
-          </label>
-          <label class="restaurant-field restaurant-field-wide restaurant-photo-field">
-            <span>Menu screenshot or photo</span>
-            <input id="restaurant-photo-input" type="file" accept="image/*" capture="environment" />
-            <small class="restaurant-field-note">
-              Take the shot. OCR runs in the browser and the audit starts automatically.
-            </small>
-          </label>
-          <label class="restaurant-field restaurant-field-wide">
-            <span>Paste menu text if the site is annoying</span>
-            <textarea
-              id="restaurant-menu-text"
-              rows="6"
-              placeholder="OCR text lands here automatically. You can also paste menu text here if the site is a pain."
-            ></textarea>
-          </label>
-        </div>
-        <div class="warning-chips restaurant-photo-chips">
-          <span class="warning-chip" id="restaurant-photo-chip">No screenshot selected</span>
-          <span class="warning-chip" id="restaurant-ocr-chip">OCR idle</span>
-        </div>
-        <div class="restaurant-actions">
-          <button class="primary-button" id="analyze-restaurant" type="button">Audit Menu</button>
-          <button class="ghost-button" id="clear-restaurant" type="button">Clear</button>
-        </div>
-        <div class="warning-chips">
-          <span class="warning-chip" id="restaurant-context-chip">Schedule context</span>
-          <span class="warning-chip" id="restaurant-source-chip">No menu loaded yet</span>
-        </div>
-        <div class="restaurant-results">
-          <p class="restaurant-verdict idle" id="restaurant-verdict">
-            No restaurant checked yet. Give me a name, a URL, or pasted menu text.
-          </p>
-          <p class="support-text" id="restaurant-notes">
-            Restaurant name alone is enough for a best-effort lookup. A direct menu URL is faster, and pasted menu text is the fallback when the website is a mess.
-          </p>
-          <div class="restaurant-columns">
-            <section class="restaurant-column">
-              <h3>Best bets</h3>
-              <div id="restaurant-good-options" class="restaurant-option-list"></div>
-            </section>
-            <section class="restaurant-column">
-              <h3>Alternates if not for you</h3>
-              <div id="restaurant-alternate-options" class="restaurant-option-list"></div>
-            </section>
-          </div>
-          <section class="restaurant-secondary-section">
-            <h3>Leave these alone</h3>
-            <div id="restaurant-bad-options" class="restaurant-option-list"></div>
+
+        <div class="restaurant-recommendation-grid">
+          <section class="restaurant-column restaurant-primary-lane">
+            <div class="restaurant-section-head">
+              <div>
+                <p class="eyebrow">Best bets</p>
+                <h3>Order one of these</h3>
+              </div>
+              <p class="support-text">This is the main lane. Pick the cleanest option and stop there.</p>
+            </div>
+            <div id="restaurant-good-options" class="restaurant-option-list"></div>
+          </section>
+
+          <section class="restaurant-column restaurant-alternate-lane">
+            <div class="restaurant-section-head">
+              <div>
+                <p class="eyebrow">Alternates</p>
+                <h3>If the first call is not for you</h3>
+              </div>
+              <p class="support-text">Reject a suggestion and rotate to the next least-stupid option.</p>
+            </div>
+            <div id="restaurant-alternate-options" class="restaurant-option-list"></div>
           </section>
         </div>
+
+        <section class="restaurant-secondary-section">
+          <div class="restaurant-section-head restaurant-section-head-secondary">
+            <div>
+              <p class="eyebrow">Avoid list</p>
+              <h3>Leave these alone</h3>
+            </div>
+            <p class="support-text">Visible, but secondary. These are the obvious carb wrecks and trap orders.</p>
+          </div>
+          <div id="restaurant-bad-options" class="restaurant-option-list"></div>
+        </section>
       </section>
 
       <section class="panel memory-panel" data-page-section="memory">
-        <div class="panel-head compact">
+        <div class="panel-head compact memory-head">
           <div>
-            <p class="eyebrow">DietHawk Memory</p>
-            <h2>What this app remembers</h2>
+            <p class="eyebrow">Operator Dossier</p>
+            <h2>What Steve already has under control</h2>
           </div>
         </div>
-        <p id="memory-overview" class="support-text">
+        <p id="memory-overview" class="support-text memory-overview">
           This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.
         </p>
-        <div class="warning-chips">
-          <span class="warning-chip" id="memory-stats-restaurants">0 favorite restaurants</span>
-          <span class="warning-chip" id="memory-stats-audits">0 recent audits</span>
-          <span class="warning-chip" id="memory-stats-meals">0 recurring meals</span>
-          <span class="warning-chip" id="memory-stats-orders">0 repeated safe orders</span>
-          <span class="warning-chip" id="memory-stats-drinks">0 recurring drinks</span>
-          <span class="warning-chip" id="memory-stats-dislikes">0 disliked foods</span>
+
+        <div class="memory-brief-grid">
+          <article class="memory-dossier-card">
+            <p class="eyebrow">Current restaurant dossier</p>
+            <h3>What the latest restaurant already taught you</h3>
+            <div id="restaurant-memory-callout" class="memory-callout">
+              Type a restaurant name or run an audit and the memory layer will start stacking repeated safe bets here.
+            </div>
+          </article>
+
+          <article class="memory-dossier-card">
+            <p class="eyebrow">Recent reads</p>
+            <h3>Latest restaurant audits</h3>
+            <div id="memory-recent-audits" class="restaurant-option-list"></div>
+          </article>
         </div>
-        <div id="restaurant-memory-callout" class="memory-callout">
-          Type a restaurant name or run an audit and the memory layer will start stacking repeated safe bets here.
-        </div>
-        <div class="restaurant-columns memory-columns">
-          <section class="restaurant-column">
-            <h3>Favorite restaurants</h3>
-            <div id="memory-restaurant-list" class="restaurant-option-list"></div>
-          </section>
-          <section class="restaurant-column">
-            <h3>Repeated actual orders</h3>
+
+        <div class="memory-playbook-grid">
+          <section class="restaurant-column memory-module memory-module-primary">
+            <div class="memory-section-head">
+              <div>
+                <p class="eyebrow">Default orders</p>
+                <h3>Repeated actual orders</h3>
+              </div>
+              <p class="support-text">These are the restaurant calls Steve already proved he will actually make.</p>
+            </div>
             <div id="memory-order-list" class="restaurant-option-list"></div>
           </section>
-        </div>
-        <div class="restaurant-columns memory-columns">
-          <section class="restaurant-column">
-            <h3>Recurring meals</h3>
-            <div id="memory-meal-list" class="restaurant-option-list"></div>
+
+          <section class="restaurant-column memory-module">
+            <div class="memory-section-head">
+              <div>
+                <p class="eyebrow">Restaurant wins</p>
+                <h3>Favorite restaurants</h3>
+              </div>
+              <p class="support-text">Repeated places and the workable picks attached to them.</p>
+            </div>
+            <div id="memory-restaurant-list" class="restaurant-option-list"></div>
           </section>
-          <section class="restaurant-column">
-            <h3>Recurring drinks</h3>
+
+          <section class="restaurant-column memory-module">
+            <div class="memory-section-head">
+              <div>
+                <p class="eyebrow">Drink repeats</p>
+                <h3>Recurring drinks</h3>
+              </div>
+              <p class="support-text">Use this as pattern recognition, not permission.</p>
+            </div>
             <div id="memory-drink-list" class="restaurant-option-list"></div>
           </section>
+
+          <section class="restaurant-column memory-module">
+            <div class="memory-section-head">
+              <div>
+                <p class="eyebrow">Meal repeats</p>
+                <h3>Recurring meals</h3>
+              </div>
+              <p class="support-text">Lean on the meals that already survived repetition.</p>
+            </div>
+            <div id="memory-meal-list" class="restaurant-option-list"></div>
+          </section>
         </div>
-        <section class="restaurant-column memory-wide-column">
-          <h3>Disliked foods</h3>
-          <p class="support-text">Add foods Steve wants flagged so meals and restaurant calls stop pretending he likes them.</p>
+
+        <section class="restaurant-column memory-wide-column memory-avoid-module">
+          <div class="memory-section-head">
+            <div>
+              <p class="eyebrow">Avoid list</p>
+              <h3>Flag these on sight</h3>
+            </div>
+            <p class="support-text">Add foods Steve wants flagged so meals and restaurant calls stop pretending he likes them.</p>
+          </div>
           <div class="memory-disliked-controls">
             <input id="disliked-food-input" type="text" placeholder="Onions, blue cheese, pork rinds" autocomplete="off" />
             <button class="primary-button small" id="add-disliked-food" type="button">Add</button>
           </div>
           <div id="memory-disliked-list" class="warning-chips memory-chip-list"></div>
         </section>
-        <div class="restaurant-actions">
-          <button class="ghost-button" id="export-memory" type="button">Export Memory</button>
-          <button class="ghost-button" id="clear-memory" type="button">Clear Memory</button>
-        </div>
+
+        <section class="memory-maintenance">
+          <div class="memory-section-head">
+            <div>
+              <p class="eyebrow">Maintenance</p>
+              <h3>Raw counts and cleanup</h3>
+            </div>
+            <p class="support-text">Export and clear still exist. They just no longer lead the page.</p>
+          </div>
+          <div class="warning-chips memory-stats-chips">
+            <span class="warning-chip" id="memory-stats-restaurants">0 favorite restaurants</span>
+            <span class="warning-chip" id="memory-stats-audits">0 recent audits</span>
+            <span class="warning-chip" id="memory-stats-meals">0 recurring meals</span>
+            <span class="warning-chip" id="memory-stats-orders">0 repeated actual orders</span>
+            <span class="warning-chip" id="memory-stats-drinks">0 recurring drinks</span>
+            <span class="warning-chip" id="memory-stats-dislikes">0 disliked foods</span>
+          </div>
+          <div class="restaurant-actions memory-maintenance-actions">
+            <button class="ghost-button" id="export-memory" type="button">Export Memory</button>
+            <button class="ghost-button" id="clear-memory" type="button">Clear Memory</button>
+          </div>
+        </section>
       </section>
 
       <section class="panel motivation-panel" data-page-section="memory">
