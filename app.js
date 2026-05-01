@@ -3571,6 +3571,13 @@ function maybeAlertForDueTask() {
 
   nextDueTask.lastAlertedForDue = nextDueTask.nextDue;
   saveState();
+
+  if (window.matchMedia("(max-width: 720px)").matches) {
+    showToast(`Due now: ${nextDueTask.title}`);
+    sendNotification(nextDueTask);
+    return;
+  }
+
   openModal(nextDueTask);
   sendNotification(nextDueTask);
 }
