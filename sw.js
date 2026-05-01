@@ -1,9 +1,14 @@
-const CACHE_NAME = "diethawk-v1";
+const CACHE_NAME = "diethawk-v3";
 const APP_FILES = [
   "./",
   "./index.html",
+  "./schedule.html",
+  "./meals.html",
+  "./restaurant.html",
+  "./memory.html",
   "./styles.css",
   "./app.js",
+  "./page-loader.js",
   "./manifest.webmanifest",
   "./icon.svg",
 ];

@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="DietHawk" />
     <meta
       name="description"
-      content="DietHawk is Steve Hawkins' direct, mobile-first keto, fasting, movement, and tracking guide."
+      content="DietHawk is Steve Hawkins' direct, mobile-first keto, fasting, cholesterol-aware, movement, and tracking guide."
     />
     <title>DietHawk | Steve's Keto Command</title>
     <link rel="manifest" href="./manifest.webmanifest" />
@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <script src="./app.js" defer></script>
   </head>
-  <body>
+  <body data-page="today">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
@@ -35,14 +35,17 @@
             <p class="eyebrow">Command Menu</p>
             <h2 id="current-page-label">Today</h2>
           </div>
-          <p class="support-text page-menu-copy">Use the menu. Stop scrolling through the whole app like it is a ransom note.</p>
+          <div class="page-menu-side">
+            <span class="warning-chip memory-sync-chip idle" id="memory-sync-status">Memory ready</span>
+            <p class="support-text page-menu-copy">Use the menu. Stop scrolling through the whole app like it is a ransom note.</p>
+          </div>
         </div>
         <div class="page-links" role="tablist" aria-label="DietHawk pages">
-          <a class="page-link active" data-page-link="today" href="#today">Today</a>
-          <a class="page-link" data-page-link="schedule" href="#schedule">Schedule</a>
-          <a class="page-link" data-page-link="meals" href="#meals">Meals</a>
-          <a class="page-link" data-page-link="restaurant" href="#restaurant">Restaurant</a>
-          <a class="page-link" data-page-link="memory" href="#memory">Memory</a>
+          <a class="page-link active" data-page-link="today" href="./index.html">Today</a>
+          <a class="page-link" data-page-link="schedule" href="./schedule.html">Schedule</a>
+          <a class="page-link" data-page-link="meals" href="./meals.html">Meals</a>
+          <a class="page-link" data-page-link="restaurant" href="./restaurant.html">Restaurant</a>
+          <a class="page-link" data-page-link="memory" href="./memory.html">Memory</a>
         </div>
       </nav>
 
@@ -52,7 +55,7 @@
           <h1>No bargaining. Follow the plan.</h1>
           <p class="hero-lead">
             This is Steve Hawkins' daily operating system: fasting clock, keto meal calls,
-            alcohol accountability, movement blocks, and blunt reminders that keep the day on rails.
+            alcohol accountability, movement blocks, cholesterol-aware meal filters, and blunt reminders that keep the day on rails.
           </p>
           <div class="hero-actions">
             <button class="primary-button" id="enable-notifications" type="button">Enable Alerts</button>
@@ -118,7 +121,7 @@
             </article>
             <article class="rule-card">
               <span class="rule-title">During eating window</span>
-              <p>Protein first. Net carbs stay under control. No aimless snacking.</p>
+              <p>Protein first. Net carbs stay under control. Leaner protein and cleaner fats beat bacon-and-cheese clown food.</p>
             </article>
             <article class="rule-card rule-card-warning">
               <span class="rule-title">Medication + alcohol caution</span>
@@ -432,21 +435,38 @@
           This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.
         </p>
         <div class="warning-chips">
-          <span class="warning-chip" id="memory-stats-restaurants">0 places remembered</span>
+          <span class="warning-chip" id="memory-stats-restaurants">0 favorite restaurants</span>
           <span class="warning-chip" id="memory-stats-audits">0 recent audits</span>
           <span class="warning-chip" id="memory-stats-meals">0 recurring meals</span>
+          <span class="warning-chip" id="memory-stats-orders">0 repeated safe orders</span>
+          <span class="warning-chip" id="memory-stats-dislikes">0 disliked foods</span>
         </div>
         <div id="restaurant-memory-callout" class="memory-callout">
           Type a restaurant name or run an audit and the memory layer will start stacking repeated safe bets here.
         </div>
         <div class="restaurant-columns memory-columns">
           <section class="restaurant-column">
-            <h3>Restaurant memory</h3>
+            <h3>Favorite restaurants</h3>
             <div id="memory-restaurant-list" class="restaurant-option-list"></div>
           </section>
           <section class="restaurant-column">
+            <h3>Repeated safe orders</h3>
+            <div id="memory-order-list" class="restaurant-option-list"></div>
+          </section>
+        </div>
+        <div class="restaurant-columns memory-columns">
+          <section class="restaurant-column">
             <h3>Recurring meals</h3>
             <div id="memory-meal-list" class="restaurant-option-list"></div>
+          </section>
+          <section class="restaurant-column">
+            <h3>Disliked foods</h3>
+            <p class="support-text">Add foods Steve wants flagged so meals and restaurant calls stop pretending he likes them.</p>
+            <div class="memory-disliked-controls">
+              <input id="disliked-food-input" type="text" placeholder="Onions, blue cheese, pork rinds" autocomplete="off" />
+              <button class="primary-button small" id="add-disliked-food" type="button">Add</button>
+            </div>
+            <div id="memory-disliked-list" class="warning-chips memory-chip-list"></div>
           </section>
         </div>
         <div class="restaurant-actions">

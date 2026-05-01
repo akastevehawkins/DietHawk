@@ -4,6 +4,7 @@ const PROFILE = {
   weightLbs: 235,
   heightInches: 74,
   medication: "lisinopril-hctz 20-25 mg",
+  healthConcerns: ["high blood pressure", "high cholesterol"],
   fastStart: "18:30",
   fastEnd: "10:30",
   waterGoal: 3,
@@ -11,6 +12,7 @@ const PROFILE = {
   carbGoal: 30,
   movementGoal: 45,
   stepsGoal: 8000,
+  heartSmartMealGoal: 2,
   drinkLimit: 2,
 };
 
@@ -119,79 +121,88 @@ const MEAL_LIBRARY = {
   breakfast: [
     {
       id: "breakfast-omelet",
-      name: "Spinach cheddar omelet with avocado",
-      note: "Three eggs, spinach, cheddar, and half an avocado. Heavy protein, low nonsense.",
-      calories: 520,
-      protein: 33,
+      name: "Spinach feta omelet with avocado",
+      note: "Eggs, spinach, feta, and avocado. Lower saturated-fat drag than the cheese-bomb version, still keto, still useful.",
+      calories: 490,
+      protein: 31,
       carbs: 7,
+      heartScore: 1,
     },
     {
       id: "breakfast-scramble",
-      name: "Turkey sausage egg scramble",
-      note: "Eggs, turkey sausage, peppers, and salsa. Fast to make and still on plan.",
-      calories: 470,
-      protein: 35,
+      name: "Turkey and egg-white scramble",
+      note: "Turkey, egg whites, peppers, spinach, and salsa. Better for the cholesterol problem than leaning on sausage.",
+      calories: 410,
+      protein: 37,
       carbs: 8,
+      heartScore: 1,
     },
     {
       id: "breakfast-salmon",
       name: "Smoked salmon plate",
-      note: "Smoked salmon, cucumber, cream cheese, and boiled eggs. Clean and filling.",
-      calories: 430,
+      note: "Smoked salmon, cucumber, avocado, and boiled eggs. Cleaner fats, solid protein, less nonsense.",
+      calories: 420,
       protein: 34,
       carbs: 6,
+      heartScore: 2,
     },
   ],
   lunch: [
     {
       id: "lunch-salad",
       name: "Chicken power salad",
-      note: "Grilled chicken, romaine, cucumber, feta, olives, olive oil. Protein first, crunch second.",
+      note: "Grilled chicken, romaine, cucumber, feta, olives, olive oil. Good keto structure and a cleaner cholesterol move.",
       calories: 620,
       protein: 46,
       carbs: 10,
+      heartScore: 2,
     },
     {
       id: "lunch-burger-bowl",
-      name: "Burger bowl",
-      note: "Beef patty, lettuce, pickles, cheddar, avocado, and mustard. Skip the bun and stay serious.",
-      calories: 700,
-      protein: 40,
+      name: "Lean burger bowl",
+      note: "Lean beef patty, lettuce, pickles, tomato, avocado, and mustard. Better than a bun, but not the daily cholesterol special.",
+      calories: 630,
+      protein: 42,
       carbs: 11,
+      heartScore: -1,
     },
     {
       id: "lunch-tuna",
       name: "Tuna lettuce boats",
-      note: "Tuna, mayo, celery, lettuce, and a side of cucumbers. Fast, cold, effective.",
+      note: "Tuna, olive-oil mayo, celery, lettuce, and cucumbers. Fast, cold, and better for the LDL issue than processed meat shortcuts.",
       calories: 480,
       protein: 38,
       carbs: 6,
+      heartScore: 2,
     },
   ],
   dinner: [
     {
       id: "dinner-salmon",
       name: "Salmon with asparagus",
-      note: "Salmon, asparagus, and butter. Finish the day like an adult.",
-      calories: 640,
+      note: "Salmon, asparagus, and olive oil. Finish the day like an adult and stop pretending fried junk is your only option.",
+      calories: 610,
       protein: 45,
       carbs: 8,
+      heartScore: 2,
     },
     {
       id: "dinner-steak",
       name: "Steak with cauliflower mash",
-      note: "Steak, cauliflower mash, and greens. Heavy on protein, light on excuses.",
+      note: "Steak, cauliflower mash, and greens. Fine sometimes, not the daily answer when cholesterol is already a problem.",
       calories: 720,
       protein: 50,
       carbs: 12,
+      heartScore: -2,
     },
     {
       id: "dinner-taco",
-      name: "Taco bowl",
-      note: "Ground beef, lettuce, salsa, avocado, sour cream, and cheese. No chips. No shell.",
-      calories: 680,
+      name: "Turkey taco bowl",
+      note: "Ground turkey, lettuce, salsa, avocado, and cabbage slaw. No shell, no chips, and less saturated-fat baggage.",
+      calories: 610,
       protein: 42,
       carbs: 10,
+      heartScore: 1,
     },
   ],
   snack: [
@@ -202,6 +213,7 @@ const MEAL_LIBRARY = {
       calories: 180,
       protein: 13,
       carbs: 3,
+      heartScore: 0,
     },
     {
       id: "snack-shake",
@@ -210,14 +222,16 @@ const MEAL_LIBRARY = {
       calories: 190,
       protein: 30,
       carbs: 4,
+      heartScore: 0,
     },
     {
       id: "snack-walnuts",
-      name: "Walnuts and cheese",
-      note: "Measured portion only. A snack is not a free-for-all.",
-      calories: 230,
-      protein: 10,
+      name: "Walnuts and olives",
+      note: "Measured portion only. Better for the cholesterol problem than making every snack a cheese event.",
+      calories: 220,
+      protein: 6,
       carbs: 4,
+      heartScore: 2,
     },
   ],
 };
@@ -378,6 +392,49 @@ const KETO_NEGATIVE_KEYWORDS = [
   "mac and cheese",
 ];
 
+const CHOLESTEROL_POSITIVE_KEYWORDS = [
+  "salmon",
+  "tuna",
+  "sardine",
+  "grilled",
+  "baked",
+  "roasted",
+  "olive oil",
+  "avocado",
+  "broccoli",
+  "asparagus",
+  "spinach",
+  "greens",
+  "cucumber",
+  "walnut",
+  "walnuts",
+  "turkey",
+  "chicken",
+  "lettuce",
+  "cauliflower",
+  "zucchini",
+];
+
+const CHOLESTEROL_NEGATIVE_KEYWORDS = [
+  "fried",
+  "crispy",
+  "breaded",
+  "bacon",
+  "sausage",
+  "pepperoni",
+  "salami",
+  "ham",
+  "double cheese",
+  "cheese sauce",
+  "alfredo",
+  "cream sauce",
+  "buttery",
+  "butter",
+  "ranch",
+  "loaded",
+  "smothered",
+];
+
 const MENU_NOISE_PATTERNS = [
   /order online/i,
   /start your order/i,
@@ -413,6 +470,10 @@ const STORAGE_PREFIX = "diethawk-day-";
 const MOVE_STORAGE_KEY = "diethawk-moves";
 const INSTALL_DISMISS_KEY = "diethawk-install-dismissed";
 const MEMORY_STORAGE_KEY = "diethawk-memory-v1";
+const MEMORY_DB_NAME = "diethawk-memory-db";
+const MEMORY_DB_VERSION = 1;
+const MEMORY_STORE_NAME = "memory";
+const MEMORY_RECORD_KEY = "main";
 const PAGE_LABELS = {
   today: "Today",
   schedule: "Schedule",
@@ -420,12 +481,24 @@ const PAGE_LABELS = {
   restaurant: "Restaurant",
   memory: "Memory",
 };
+const PAGE_PATHS = {
+  today: "./index.html",
+  schedule: "./schedule.html",
+  meals: "./meals.html",
+  restaurant: "./restaurant.html",
+  memory: "./memory.html",
+};
 
 let state = loadState();
-let memory = loadMemory();
+let memory = buildDefaultMemory();
 let activeModalTaskId = null;
 let toastTimer = null;
 let tesseractLoaderPromise = null;
+let latestMemorySyncRequestId = 0;
+let memorySyncState = {
+  tone: "idle",
+  message: "Memory ready",
+};
 
 function init() {
   renderProfile();
@@ -433,8 +506,10 @@ function init() {
   renderMeals();
   renderDrinkButtons();
   bindEvents();
+  renderMemorySyncStatus();
   renderPageNavigation();
   refreshAll();
+  void initializeMemoryStore();
   registerServiceWorker();
   maybeAlertForDueTask();
   maybeAlertForMovementTimer();
@@ -534,6 +609,30 @@ function bindEvents() {
 
   document.getElementById("clear-memory").addEventListener("click", () => {
     clearMemory();
+  });
+
+  document.getElementById("add-disliked-food").addEventListener("click", () => {
+    const input = document.getElementById("disliked-food-input");
+    addDislikedFood(input.value);
+    input.value = "";
+  });
+
+  document.getElementById("disliked-food-input").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    const input = document.getElementById("disliked-food-input");
+    addDislikedFood(input.value);
+    input.value = "";
+  });
+
+  document.getElementById("memory-disliked-list").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-disliked]");
+    if (!button) {
+      return;
+    }
+    removeDislikedFood(button.dataset.removeDisliked);
   });
 
   document.getElementById("dismiss-install").addEventListener("click", () => {
@@ -638,13 +737,25 @@ function renderMeals() {
   Object.entries(MEAL_LIBRARY).forEach(([group, meals]) => {
     const root = document.getElementById(`${group}-meals`);
     root.innerHTML = meals
-      .map(
-        (meal) => `
+      .map((meal) => {
+        const guidance = [];
+        const dislikedMatches = getDislikedFoodMatches(`${meal.name} ${meal.note}`);
+        if (meal.heartScore > 0) {
+          guidance.push("Better fit for the cholesterol problem: leaner protein, cleaner fats, or more fiber-heavy veg.");
+        } else if (meal.heartScore < 0) {
+          guidance.push("Not the daily default when high cholesterol is already on the board.");
+        }
+        if (dislikedMatches.length) {
+          guidance.push(`Contains a saved avoid food: ${dislikedMatches.join(", ")}.`);
+        }
+
+        return `
           <article class="meal-card">
             <div class="meal-top">
               <div>
                 <h3>${meal.name}</h3>
                 <p>${meal.note}</p>
+                ${guidance.length ? `<p class="meal-preference-note">${guidance.join(" ")}</p>` : ""}
               </div>
               <span class="meal-type">${group}</span>
             </div>
@@ -655,8 +766,8 @@ function renderMeals() {
             </div>
             <button type="button" data-meal-id="${meal.id}" data-meal-group="${group}">Log this meal</button>
           </article>
-        `,
-      )
+        `;
+      })
       .join("");
   });
 
@@ -695,7 +806,9 @@ function renderMoves() {
 
 function refreshAll() {
   renderInstallState();
+  renderMemorySyncStatus();
   renderPageNavigation();
+  renderMeals();
   renderPhase();
   renderLocalClock();
   renderCategoryTimers();
@@ -713,6 +826,28 @@ function refreshAll() {
 }
 
 function getCurrentPage() {
+  const explicitPage = document.body.dataset.page?.trim().toLowerCase();
+  if (PAGE_LABELS[explicitPage]) {
+    return explicitPage;
+  }
+
+  const pageName = window.location.pathname.split("/").pop()?.toLowerCase() || "index.html";
+  if (pageName === "" || pageName === "index.html") {
+    return "today";
+  }
+  if (pageName === "schedule.html") {
+    return "schedule";
+  }
+  if (pageName === "meals.html") {
+    return "meals";
+  }
+  if (pageName === "restaurant.html") {
+    return "restaurant";
+  }
+  if (pageName === "memory.html") {
+    return "memory";
+  }
+
   const nextPage = window.location.hash.replace(/^#/, "").trim().toLowerCase();
   return PAGE_LABELS[nextPage] ? nextPage : "today";
 }
@@ -721,8 +856,12 @@ function renderPageNavigation() {
   const currentPage = getCurrentPage();
   const currentPageLabel = document.getElementById("current-page-label");
   currentPageLabel.textContent = PAGE_LABELS[currentPage];
+  document.title = `DietHawk | ${PAGE_LABELS[currentPage]}`;
 
   document.querySelectorAll("[data-page-link]").forEach((link) => {
+    if (PAGE_PATHS[link.dataset.pageLink]) {
+      link.setAttribute("href", PAGE_PATHS[link.dataset.pageLink]);
+    }
     const isActive = link.dataset.pageLink === currentPage;
     link.classList.toggle("active", isActive);
     if (isActive) {
@@ -735,6 +874,27 @@ function renderPageNavigation() {
   document.querySelectorAll("[data-page-section]").forEach((section) => {
     section.classList.toggle("page-hidden", section.dataset.pageSection !== currentPage);
   });
+}
+
+async function initializeMemoryStore() {
+  setMemorySyncState("saving", "Loading memory...");
+  memory = await loadPersistentMemory();
+  setMemorySyncState("idle", "Memory ready");
+  refreshAll();
+}
+
+function setMemorySyncState(tone, message) {
+  memorySyncState = { tone, message };
+  renderMemorySyncStatus();
+}
+
+function renderMemorySyncStatus() {
+  const chip = document.getElementById("memory-sync-status");
+  if (!chip) {
+    return;
+  }
+  chip.textContent = memorySyncState.message;
+  chip.className = `warning-chip memory-sync-chip ${memorySyncState.tone}`;
 }
 
 function renderInstallState() {
@@ -846,6 +1006,7 @@ function renderLocalClock() {
 
 function renderWarnings() {
   const totals = getTotals();
+  const heartPlan = getHeartPlanStatus();
   const warnings = [];
   const now = new Date();
   const phase = getCurrentPhase(now);
@@ -874,6 +1035,14 @@ function renderWarnings() {
 
   if (state.movementMinutes < 20 && now.getHours() >= 17) {
     warnings.push("Movement is too low. You still have time to save the day with a walk.");
+  }
+
+  if (now.getHours() >= 14 && heartPlan.mealsSupporting < 1) {
+    warnings.push("High cholesterol still counts. Get at least one cleaner meal in today: fish, lean protein, olive oil, avocado, nuts, or more non-starchy veg.");
+  }
+
+  if (heartPlan.riskMeals >= 2) {
+    warnings.push("Low-carb is not a hall pass for fried food, processed meat, and cheese piles. The cholesterol issue still wants cleaner choices.");
   }
 
   if (warnings.length === 0) {
@@ -906,6 +1075,7 @@ function renderTotals() {
 
 function renderGoals() {
   const totals = getTotals();
+  const heartPlan = getHeartPlanStatus();
   const goals = [
     {
       label: "Water",
@@ -948,6 +1118,13 @@ function renderGoals() {
       target: PROFILE.drinkLimit,
       display: `${totals.drinks} / ${PROFILE.drinkLimit} drinks`,
       mode: "lower",
+    },
+    {
+      label: "Heart-smart meals",
+      current: heartPlan.mealsSupporting,
+      target: PROFILE.heartSmartMealGoal,
+      display: `${heartPlan.mealsSupporting} / ${PROFILE.heartSmartMealGoal} cleaner choices`,
+      mode: "higher",
     },
   ];
 
@@ -1182,15 +1359,19 @@ function renderMemory() {
   const restaurantCount = memory.restaurants.entries.length;
   const auditCount = memory.restaurants.recentAudits.length;
   const mealCount = memory.preferences.favoriteMeals.length;
+  const orderCount = memory.preferences.favoriteOrders.length;
+  const dislikedFoodCount = memory.preferences.dislikedFoods.length;
   const currentRestaurantName = (state.restaurantAudit.restaurantName || "").trim();
   const currentRestaurantMemory = getRestaurantMemoryFor(currentRestaurantName);
 
-  document.getElementById("memory-overview").textContent = restaurantCount || mealCount
-    ? "DietHawk now remembers repeated restaurants and meal patterns across days. That means less rework and better repeated calls."
+  document.getElementById("memory-overview").textContent = restaurantCount || mealCount || orderCount || dislikedFoodCount
+    ? "DietHawk now remembers repeated restaurants, safe orders, disliked foods, and meal patterns across days. That means less rework and less pretending you forgot what already works."
     : "This is the v2 memory layer. Repeated meals and restaurant audits now persist across days instead of resetting at midnight.";
-  document.getElementById("memory-stats-restaurants").textContent = `${restaurantCount} ${restaurantCount === 1 ? "place" : "places"} remembered`;
+  document.getElementById("memory-stats-restaurants").textContent = `${restaurantCount} ${restaurantCount === 1 ? "favorite restaurant" : "favorite restaurants"}`;
   document.getElementById("memory-stats-audits").textContent = `${auditCount} recent ${auditCount === 1 ? "audit" : "audits"}`;
   document.getElementById("memory-stats-meals").textContent = `${mealCount} recurring ${mealCount === 1 ? "meal" : "meals"}`;
+  document.getElementById("memory-stats-orders").textContent = `${orderCount} repeated ${orderCount === 1 ? "safe order" : "safe orders"}`;
+  document.getElementById("memory-stats-dislikes").textContent = `${dislikedFoodCount} disliked ${dislikedFoodCount === 1 ? "food" : "foods"}`;
 
   const callout = document.getElementById("restaurant-memory-callout");
   if (currentRestaurantMemory) {
@@ -1209,7 +1390,9 @@ function renderMemory() {
   }
 
   renderMemoryRestaurantList();
+  renderFavoriteOrdersList();
   renderMemoryMealList();
+  renderDislikedFoodList();
 }
 
 function renderMemoryRestaurantList() {
@@ -1250,6 +1433,40 @@ function renderMemoryMealList() {
         <p>${escapeHtml(entry.group)} logged ${entry.count} ${entry.count === 1 ? "time" : "times"}.</p>
         <p class="memory-meta">Last logged ${escapeHtml(formatMemoryTimestamp(entry.lastLoggedAt))}</p>
       </article>
+    `)
+    .join("");
+}
+
+function renderFavoriteOrdersList() {
+  const root = document.getElementById("memory-order-list");
+  if (!memory.preferences.favoriteOrders.length) {
+    root.innerHTML = '<div class="restaurant-empty">No repeated safe orders yet. Audit the same places a few times and the reliable picks will rise to the top.</div>';
+    return;
+  }
+
+  root.innerHTML = memory.preferences.favoriteOrders
+    .map((entry) => `
+      <article class="restaurant-option good">
+        <h4>${escapeHtml(entry.title)}</h4>
+        <p>${escapeHtml(entry.restaurantName)} • learned ${entry.count} ${entry.count === 1 ? "time" : "times"}</p>
+        <p class="memory-meta">${escapeHtml(entry.note)}</p>
+      </article>
+    `)
+    .join("");
+}
+
+function renderDislikedFoodList() {
+  const root = document.getElementById("memory-disliked-list");
+  if (!memory.preferences.dislikedFoods.length) {
+    root.innerHTML = '<div class="restaurant-empty">No disliked foods saved yet. Add the foods Steve repeatedly wants to avoid and the app will start judging around them.</div>';
+    return;
+  }
+
+  root.innerHTML = memory.preferences.dislikedFoods
+    .map((food) => `
+      <button class="warning-chip removable-chip" type="button" data-remove-disliked="${escapeHtml(food)}">
+        ${escapeHtml(food)} ×
+      </button>
     `)
     .join("");
 }
@@ -1653,11 +1870,12 @@ function analyzeRestaurantMenu({ restaurantName, menuText, sourceLabel, sourceUr
   const sourceText = sourceUrl
     ? `Source: ${getHostLabel(sourceUrl)} via ${sourceLabel}.`
     : `Source: ${sourceLabel}.`;
+  const heartNote = "High cholesterol means fried food, bacon stacks, sausage bombs, and butter-soaked low-carb junk do not get a free pass.";
 
   return {
     verdictTone,
     verdict,
-    notes: `${scheduleContext.message} ${sourceText}`.trim(),
+    notes: `${scheduleContext.message} ${heartNote} ${sourceText}`.trim(),
     goodOptions,
     badOptions,
   };
@@ -1749,12 +1967,18 @@ function evaluateMenuLine(line) {
   const lower = line.toLowerCase();
   const positiveHits = countKeywordHits(lower, KETO_POSITIVE_KEYWORDS);
   const negativeHits = countKeywordHits(lower, KETO_NEGATIVE_KEYWORDS);
+  const cholesterolPositiveHits = countKeywordHits(lower, CHOLESTEROL_POSITIVE_KEYWORDS);
+  const cholesterolNegativeHits = countKeywordHits(lower, CHOLESTEROL_NEGATIVE_KEYWORDS);
+  const dislikedMatches = getDislikedFoodMatches(lower);
 
-  if (positiveHits === 0 && negativeHits === 0) {
+  if (positiveHits === 0 && negativeHits === 0 && cholesterolPositiveHits === 0 && cholesterolNegativeHits === 0 && !dislikedMatches.length) {
     return null;
   }
 
   const notes = [];
+  if (dislikedMatches.length) {
+    notes.push(`You already flagged ${dislikedMatches.join(", ")} as food to avoid. Act like you meant it.`);
+  }
   if (lower.includes("burger")) {
     notes.push("Order it bunless and replace fries with a side salad or extra veg.");
   }
@@ -1773,12 +1997,22 @@ function evaluateMenuLine(line) {
   if ((lower.includes("steak") || lower.includes("salmon") || lower.includes("chicken") || lower.includes("shrimp") || lower.includes("pork")) && negativeHits === 0) {
     notes.push("Keep the protein. Replace the starch with vegetables if the kitchen will do it.");
   }
+  if (cholesterolPositiveHits > 0 && cholesterolNegativeHits === 0) {
+    notes.push("Also the cleaner call for the cholesterol problem: leaner protein, fish, olive oil, or extra veg.");
+  }
+  if (cholesterolNegativeHits > 0) {
+    notes.push("Low-carb does not rescue fried or processed fat bombs when high cholesterol is already in the picture.");
+  }
 
-  let score = positiveHits * 2 - negativeHits * 2 + (notes.length > 0 ? 1 : 0);
-  const clearlyBad = /dessert|milkshake|pizza|pasta|waffle|pancake|donut|fries|nachos|cookie|brownie/.test(lower);
+  let score = positiveHits * 2 - negativeHits * 2 + cholesterolPositiveHits - cholesterolNegativeHits * 2 + (notes.length > 0 ? 1 : 0);
+  if (dislikedMatches.length) {
+    score -= 5;
+  }
+
+  const clearlyBad = /dessert|milkshake|pizza|pasta|waffle|pancake|donut|fries|nachos|cookie|brownie/.test(lower) || dislikedMatches.length > 0;
   let status = "bad";
 
-  if (!clearlyBad && score >= 4 && negativeHits <= 1) {
+  if (!clearlyBad && score >= 4 && negativeHits <= 1 && cholesterolNegativeHits <= 1) {
     status = "good";
   } else if (!clearlyBad && (score >= 1 || notes.length > 0) && positiveHits > 0) {
     status = "conditional";
@@ -1790,12 +2024,16 @@ function evaluateMenuLine(line) {
 
   const title = line.length > 92 ? `${line.slice(0, 89)}...` : line;
   let note = "Mostly carb baggage. Leave it alone.";
-  if (status === "good") {
+  if (dislikedMatches.length) {
+    note = `You already said ${dislikedMatches.join(", ")} is not worth eating. Believe yourself.`;
+  } else if (status === "good") {
     note = notes[0] || "Protein-forward and not obviously loaded with carb nonsense.";
   } else if (status === "conditional") {
     note = notes[0] || "This only works if you strip out the starch and sweet junk.";
   } else if (clearlyBad) {
     note = "This is dessert, bread, or starch doing a bad impression of a meal. Keep your hands off it.";
+  } else if (cholesterolNegativeHits > 0) {
+    note = "Low-carb does not excuse fried or processed fat bombs when high cholesterol is already a problem.";
   } else if (negativeHits > 0 && positiveHits > 0) {
     note = "The protein is trying, but the starch is louder. Skip it unless the kitchen can rebuild it your way.";
   }
@@ -1958,6 +2196,7 @@ function logMeal(mealId, group) {
     calories: meal.calories,
     protein: meal.protein,
     carbs: meal.carbs,
+    heartScore: meal.heartScore || 0,
     loggedAt: new Date().toISOString(),
   });
   rememberMeal(meal, group);
@@ -1966,13 +2205,29 @@ function logMeal(mealId, group) {
   showToast(`${meal.name} logged.`);
 }
 
+function getHeartPlanStatus() {
+  return state.mealLog.reduce(
+    (summary, meal) => {
+      const heartScore = Number.isFinite(meal.heartScore) ? meal.heartScore : 0;
+      return {
+        mealsSupporting: summary.mealsSupporting + (heartScore > 0 ? 1 : 0),
+        riskMeals: summary.riskMeals + (heartScore < 0 ? 1 : 0),
+        balance: summary.balance + heartScore,
+      };
+    },
+    { mealsSupporting: 0, riskMeals: 0, balance: 0 },
+  );
+}
+
 function buildDefaultMemory() {
   return {
-    version: 1,
+    version: 2,
     updatedAt: null,
     preferences: {
       coachingTone: "hardline",
       favoriteMeals: [],
+      favoriteOrders: [],
+      dislikedFoods: [],
     },
     restaurants: {
       entries: [],
@@ -2003,6 +2258,26 @@ function normalizeMemory(memoryState) {
             }))
             .slice(0, 8)
         : defaults.preferences.favoriteMeals,
+      favoriteOrders: Array.isArray(memoryState?.preferences?.favoriteOrders)
+        ? memoryState.preferences.favoriteOrders
+            .filter((item) => item && typeof item.title === "string" && typeof item.restaurantName === "string")
+            .map((item) => ({
+              key: typeof item.key === "string" ? item.key : `${normalizeMemoryKey(item.restaurantName)}::${normalizeMemoryKey(item.title)}`,
+              restaurantName: item.restaurantName,
+              title: item.title,
+              note: typeof item.note === "string" ? item.note : "",
+              count: Number.isFinite(item.count) ? item.count : 1,
+              lastSeenAt: Number.isFinite(item.lastSeenAt) ? item.lastSeenAt : Date.now(),
+            }))
+            .slice(0, 12)
+        : defaults.preferences.favoriteOrders,
+      dislikedFoods: Array.isArray(memoryState?.preferences?.dislikedFoods)
+        ? memoryState.preferences.dislikedFoods
+            .filter((item) => typeof item === "string")
+            .map((item) => item.trim().toLowerCase())
+            .filter((item, index, collection) => item.length >= 2 && collection.indexOf(item) === index)
+            .slice(0, 16)
+        : defaults.preferences.dislikedFoods,
     },
     restaurants: {
       entries: Array.isArray(memoryState?.restaurants?.entries)
@@ -2048,14 +2323,26 @@ function normalizeMemoryOptions(items) {
     : [];
 }
 
-function loadMemory() {
-  const raw = window.localStorage.getItem(MEMORY_STORAGE_KEY);
-  if (!raw) {
+async function loadPersistentMemory() {
+  try {
+    const indexedDbMemory = await readPersistedMemory();
+    if (indexedDbMemory) {
+      return normalizeMemory(indexedDbMemory);
+    }
+  } catch {
+    // Fall through to legacy storage migration.
+  }
+
+  const legacyRaw = window.localStorage.getItem(MEMORY_STORAGE_KEY);
+  if (!legacyRaw) {
     return buildDefaultMemory();
   }
 
   try {
-    return normalizeMemory(JSON.parse(raw));
+    const migratedMemory = normalizeMemory(JSON.parse(legacyRaw));
+    await writeMemoryToIndexedDb(migratedMemory);
+    window.localStorage.removeItem(MEMORY_STORAGE_KEY);
+    return migratedMemory;
   } catch {
     return buildDefaultMemory();
   }
@@ -2063,7 +2350,262 @@ function loadMemory() {
 
 function saveMemory() {
   memory.updatedAt = new Date().toISOString();
-  window.localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memory));
+  const requestId = ++latestMemorySyncRequestId;
+  setMemorySyncState("saving", "Saving memory...");
+  void persistMergedMemory(memory, requestId);
+}
+
+async function persistMergedMemory(nextMemoryState, requestId) {
+  const normalizedNextMemory = normalizeMemory(nextMemoryState);
+  normalizedNextMemory.updatedAt = new Date().toISOString();
+
+  try {
+    const persistedMemory = normalizeMemory((await readPersistedMemory()) || buildDefaultMemory());
+    const mergedMemory = mergeMemoryStates(persistedMemory, normalizedNextMemory);
+    mergedMemory.updatedAt = normalizedNextMemory.updatedAt;
+    memory = mergedMemory;
+    const storageTarget = await writeMemoryToIndexedDb(mergedMemory);
+    window.localStorage.removeItem(MEMORY_STORAGE_KEY);
+    completeMemorySync(requestId, storageTarget === "indexeddb" ? "synced" : "local", storageTarget === "indexeddb" ? "Memory synced" : "Saved locally");
+    return;
+  } catch {
+    memory = normalizedNextMemory;
+    window.localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memory));
+    completeMemorySync(requestId, "local", "Saved locally");
+  }
+}
+
+function completeMemorySync(requestId, tone, message) {
+  if (requestId !== latestMemorySyncRequestId) {
+    return;
+  }
+  setMemorySyncState(tone, message);
+}
+
+async function readPersistedMemory() {
+  const indexedDbMemory = await readMemoryFromIndexedDb();
+  if (indexedDbMemory) {
+    return indexedDbMemory;
+  }
+
+  const legacyRaw = window.localStorage.getItem(MEMORY_STORAGE_KEY);
+  if (!legacyRaw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(legacyRaw);
+  } catch {
+    return null;
+  }
+}
+
+function openMemoryDb() {
+  return new Promise((resolve, reject) => {
+    if (!("indexedDB" in window)) {
+      resolve(null);
+      return;
+    }
+
+    const request = window.indexedDB.open(MEMORY_DB_NAME, MEMORY_DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(MEMORY_STORE_NAME)) {
+        db.createObjectStore(MEMORY_STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Failed to open DietHawk memory DB."));
+  });
+}
+
+async function readMemoryFromIndexedDb() {
+  const db = await openMemoryDb();
+  if (!db) {
+    return null;
+  }
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(MEMORY_STORE_NAME, "readonly");
+    const store = transaction.objectStore(MEMORY_STORE_NAME);
+    const request = store.get(MEMORY_RECORD_KEY);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error || new Error("Failed to read DietHawk memory."));
+    transaction.oncomplete = () => db.close();
+    transaction.onabort = () => db.close();
+  });
+}
+
+async function writeMemoryToIndexedDb(memoryState) {
+  const db = await openMemoryDb();
+  if (!db) {
+    window.localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(memoryState));
+    return "local-storage";
+  }
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(MEMORY_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(MEMORY_STORE_NAME);
+    const request = store.put(memoryState, MEMORY_RECORD_KEY);
+    request.onsuccess = () => resolve("indexeddb");
+    request.onerror = () => reject(request.error || new Error("Failed to write DietHawk memory."));
+    transaction.oncomplete = () => db.close();
+    transaction.onabort = () => db.close();
+  });
+}
+
+async function clearPersistentMemory() {
+  const db = await openMemoryDb();
+  if (!db) {
+    window.localStorage.removeItem(MEMORY_STORAGE_KEY);
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(MEMORY_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(MEMORY_STORE_NAME);
+    const request = store.delete(MEMORY_RECORD_KEY);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error || new Error("Failed to clear DietHawk memory."));
+    transaction.oncomplete = () => db.close();
+    transaction.onabort = () => db.close();
+  });
+}
+
+function mergeMemoryStates(baseMemoryState, nextMemoryState) {
+  const baseMemory = normalizeMemory(baseMemoryState);
+  const nextMemory = normalizeMemory(nextMemoryState);
+
+  return {
+    version: Math.max(baseMemory.version, nextMemory.version),
+    updatedAt: pickLaterIsoTimestamp(baseMemory.updatedAt, nextMemory.updatedAt),
+    preferences: {
+      coachingTone: nextMemory.preferences.coachingTone || baseMemory.preferences.coachingTone,
+      favoriteMeals: mergeFavoriteMeals(baseMemory.preferences.favoriteMeals, nextMemory.preferences.favoriteMeals),
+      favoriteOrders: mergeFavoriteOrders(baseMemory.preferences.favoriteOrders, nextMemory.preferences.favoriteOrders),
+      dislikedFoods: Array.from(new Set([...baseMemory.preferences.dislikedFoods, ...nextMemory.preferences.dislikedFoods])).sort(),
+    },
+    restaurants: {
+      entries: mergeRestaurantEntries(baseMemory.restaurants.entries, nextMemory.restaurants.entries),
+      recentAudits: mergeRecentAudits(baseMemory.restaurants.recentAudits, nextMemory.restaurants.recentAudits),
+    },
+  };
+}
+
+function mergeFavoriteMeals(baseItems, nextItems) {
+  const merged = new Map();
+
+  [...baseItems, ...nextItems].forEach((item) => {
+    const existingItem = merged.get(item.id);
+    if (!existingItem) {
+      merged.set(item.id, { ...item });
+      return;
+    }
+
+    merged.set(item.id, {
+      ...existingItem,
+      group: item.group || existingItem.group,
+      count: Math.max(existingItem.count, item.count),
+      lastLoggedAt: pickLaterIsoTimestamp(existingItem.lastLoggedAt, item.lastLoggedAt),
+    });
+  });
+
+  return [...merged.values()]
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return new Date(right.lastLoggedAt).getTime() - new Date(left.lastLoggedAt).getTime();
+    })
+    .slice(0, 8);
+}
+
+function mergeFavoriteOrders(baseItems, nextItems) {
+  const merged = new Map();
+
+  [...baseItems, ...nextItems].forEach((item) => {
+    const existingItem = merged.get(item.key);
+    if (!existingItem) {
+      merged.set(item.key, { ...item });
+      return;
+    }
+
+    const existingTime = Number.isFinite(existingItem.lastSeenAt) ? existingItem.lastSeenAt : 0;
+    const nextTime = Number.isFinite(item.lastSeenAt) ? item.lastSeenAt : 0;
+    const useNextText = nextTime >= existingTime;
+    merged.set(item.key, {
+      ...existingItem,
+      restaurantName: useNextText ? item.restaurantName : existingItem.restaurantName,
+      title: useNextText ? item.title : existingItem.title,
+      note: useNextText ? item.note : existingItem.note,
+      count: Math.max(existingItem.count, item.count),
+      lastSeenAt: Math.max(existingTime, nextTime),
+    });
+  });
+
+  return [...merged.values()]
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return right.lastSeenAt - left.lastSeenAt;
+    })
+    .slice(0, 12);
+}
+
+function mergeRestaurantEntries(baseItems, nextItems) {
+  const merged = new Map();
+
+  [...baseItems, ...nextItems].forEach((item) => {
+    const key = item.normalizedName;
+    const existingItem = merged.get(key);
+    if (!existingItem) {
+      merged.set(key, { ...item });
+      return;
+    }
+
+    const existingTime = Number.isFinite(existingItem.lastCheckedAt) ? existingItem.lastCheckedAt : 0;
+    const nextTime = Number.isFinite(item.lastCheckedAt) ? item.lastCheckedAt : 0;
+    const latestItem = nextTime >= existingTime ? item : existingItem;
+    merged.set(key, {
+      ...existingItem,
+      name: latestItem.name,
+      normalizedName: key,
+      count: Math.max(existingItem.count, item.count),
+      lastCheckedAt: Math.max(existingTime, nextTime),
+      lastVerdictTone: latestItem.lastVerdictTone,
+      lastVerdict: latestItem.lastVerdict,
+      lastSourceLabel: latestItem.lastSourceLabel,
+      safeBets: mergeMemoryOptions(existingItem.safeBets, item.safeBets),
+      avoids: mergeMemoryOptions(existingItem.avoids, item.avoids),
+    });
+  });
+
+  return [...merged.values()]
+    .sort((left, right) => right.lastCheckedAt - left.lastCheckedAt)
+    .slice(0, 12);
+}
+
+function mergeRecentAudits(baseItems, nextItems) {
+  const merged = new Map();
+
+  [...baseItems, ...nextItems].forEach((item) => {
+    const key = `${item.normalizedName}:${item.checkedAt}`;
+    if (merged.has(key)) {
+      return;
+    }
+    merged.set(key, { ...item });
+  });
+
+  return [...merged.values()]
+    .sort((left, right) => right.checkedAt - left.checkedAt)
+    .slice(0, 8);
+}
+
+function pickLaterIsoTimestamp(leftValue, rightValue) {
+  const leftTime = Date.parse(leftValue || "") || 0;
+  const rightTime = Date.parse(rightValue || "") || 0;
+  return rightTime >= leftTime ? rightValue || leftValue || null : leftValue || rightValue || null;
 }
 
 function normalizeMemoryKey(value) {
@@ -2123,6 +2665,36 @@ function rememberRestaurantAudit(audit) {
       (entry) => !(entry.normalizedName === normalizedName && entry.checkedAt === nextEntry.lastCheckedAt),
     ),
   ].slice(0, 8);
+
+  normalizeMemoryOptions(audit.goodOptions).forEach((item) => {
+    const key = `${normalizedName}::${normalizeMemoryKey(item.title)}`;
+    const existingFavorite = memory.preferences.favoriteOrders.find((entry) => entry.key === key);
+    if (existingFavorite) {
+      existingFavorite.count += 1;
+      existingFavorite.note = item.note;
+      existingFavorite.lastSeenAt = nextEntry.lastCheckedAt;
+      return;
+    }
+
+    memory.preferences.favoriteOrders.push({
+      key,
+      restaurantName: name,
+      title: item.title,
+      note: item.note,
+      count: 1,
+      lastSeenAt: nextEntry.lastCheckedAt,
+    });
+  });
+
+  memory.preferences.favoriteOrders = memory.preferences.favoriteOrders
+    .slice()
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return right.lastSeenAt - left.lastSeenAt;
+    })
+    .slice(0, 12);
 
   saveMemory();
 }
@@ -2220,9 +2792,48 @@ function clearMemory() {
     return;
   }
   memory = buildDefaultMemory();
-  saveMemory();
+  void clearPersistentMemory().finally(() => {
+    saveMemory();
+  });
   renderMemory();
+  renderMeals();
+  renderRestaurantAudit();
   showToast("Memory cleared.");
+}
+
+function addDislikedFood(rawValue) {
+  const normalizedValue = rawValue.trim().toLowerCase();
+  if (!normalizedValue || normalizedValue.length < 2) {
+    showToast("Use a real food to avoid.");
+    return;
+  }
+
+  if (memory.preferences.dislikedFoods.includes(normalizedValue)) {
+    showToast("That food is already on the avoid list.");
+    return;
+  }
+
+  memory.preferences.dislikedFoods.push(normalizedValue);
+  memory.preferences.dislikedFoods = memory.preferences.dislikedFoods.slice().sort();
+  saveMemory();
+  renderMeals();
+  renderRestaurantAudit();
+  renderMemory();
+  showToast(`${normalizedValue} added to disliked foods.`);
+}
+
+function removeDislikedFood(value) {
+  memory.preferences.dislikedFoods = memory.preferences.dislikedFoods.filter((entry) => entry !== value);
+  saveMemory();
+  renderMeals();
+  renderRestaurantAudit();
+  renderMemory();
+  showToast(`${value} removed from disliked foods.`);
+}
+
+function getDislikedFoodMatches(text) {
+  const haystack = String(text || "").toLowerCase();
+  return memory.preferences.dislikedFoods.filter((food) => haystack.includes(food));
 }
 
 function logDrink(drinkId) {

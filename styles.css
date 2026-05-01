@@ -102,6 +102,34 @@ button {
   max-width: 34ch;
 }
 
+.page-menu-side {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.memory-sync-chip {
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.memory-sync-chip.saving {
+  background: rgba(255, 197, 90, 0.12);
+  border-color: rgba(255, 197, 90, 0.28);
+  color: var(--accent-2);
+}
+
+.memory-sync-chip.synced {
+  background: rgba(95, 215, 162, 0.12);
+  border-color: rgba(95, 215, 162, 0.26);
+  color: var(--success);
+}
+
+.memory-sync-chip.local {
+  background: rgba(255, 106, 61, 0.12);
+  border-color: rgba(255, 106, 61, 0.26);
+  color: var(--accent);
+}
+
 .page-links {
   display: flex;
   gap: 10px;
@@ -825,6 +853,38 @@ p {
   font-size: 0.92rem;
 }
 
+.memory-disliked-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+#disliked-food-input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+}
+
+.memory-chip-list {
+  margin-top: 12px;
+}
+
+.removable-chip {
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.removable-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 106, 61, 0.12);
+}
+
 .goal-head span:last-child {
   font-weight: 700;
 }
@@ -945,6 +1005,12 @@ p {
 .meal-card p {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.meal-preference-note {
+  margin-top: 10px;
+  color: rgba(255, 197, 90, 0.9) !important;
+  font-size: 0.92rem;
 }
 
 .meal-macros {
@@ -1116,11 +1182,13 @@ p {
   }
 
   .page-menu-top,
+  .page-menu-side,
   .panel-head,
   .task-subhead,
   .task-top,
   .meal-top,
-  .timeline-top {
+  .timeline-top,
+  .memory-disliked-controls {
     flex-direction: column;
     align-items: flex-start;
   }
